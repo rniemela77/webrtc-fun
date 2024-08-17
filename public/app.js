@@ -1,5 +1,4 @@
-// public/scripts/app.js
-const socket = io('https://your-websocket-server.herokuapp.com');
+const socket = io();
 
 const canvas = document.getElementById('canvas');
 
