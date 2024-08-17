@@ -1,5 +1,5 @@
-// src/app.js
-const socket = io();
+// public/scripts/app.js
+const socket = io('/.netlify/functions/signaling');
 
 const canvas = document.getElementById('canvas');
 
