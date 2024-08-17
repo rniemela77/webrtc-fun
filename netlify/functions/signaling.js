@@ -29,8 +29,7 @@ io.on('connection', (socket) => {
   });
 });
 
-exports.handler = (event, context) => {
-  server.emit('request', event);
+exports.handler = async (event, context) => {
   return {
     statusCode: 200,
     body: 'Socket.IO server running',
