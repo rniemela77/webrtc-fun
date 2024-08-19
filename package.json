@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node webrtc-app/server.js",
-    "dev": "nodemon server.js"
+    "start": "browser-sync start --server 'public' --files 'public' --port 3001 --no-notify --no-open",
+    "start-server": "nodemon server.js"
   },
   "keywords": [],
   "author": "",
@@ -13,9 +13,11 @@
   "dependencies": {
     "express": "^4.19.2",
     "socket.io": "^4.7.5",
-    "socket.io-client": "^4.7.5"
+    "socket.io-client": "^4.7.5",
+    "phaser": "^3.80.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.4"
+    "nodemon": "^3.1.4",
+    "browser-sync": "^3.0.2"
   }
 }
