@@ -1,23 +1,27 @@
 {
   "name": "webrtc-fun",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "PhaserJS with WebRTC",
+  "main": "server/signaling-server.js",
   "scripts": {
-    "start": "browser-sync start --server 'public' --files 'public' --port 3001 --no-notify --no-open",
-    "start-server": "nodemon server.js"
+    "start": "node server/signaling-server.js",
+    "serve": "http-server . -p 8080",
+    "dev": "concurrently \"npm run start\" \"npm run serve\"",
+    "build": "echo 'Build script not implemented' && exit 0"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "express": "^4.19.2",
+    "phaser": "^3.80.1",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5",
-    "phaser": "^3.80.1"
+    "ws": "^8.7.0",
+    "concurrently": "^7.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.4",
-    "browser-sync": "^3.0.2"
+    "browser-sync": "^3.0.2",
+    "nodemon": "^3.1.4"
   }
 }
