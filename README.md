@@ -3,8 +3,14 @@
 ## Description
 Experiment utilizing WebRTC
 
-## Website
 https://saimu-31d983bbe10c.herokuapp.com/
+
+## Development
+`npm run start`
+
+## Deployment (heroku)
+`heroku login`
+`git push heroku main`
 
 ## Tech
 - WebRTC: A free, open-source project that provides real-time communication capabilities for web applications.
