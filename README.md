@@ -1,24 +1,25 @@
 # Saimu
 
 ## Description
-Experiment utilizing WebRTC
 
+## Tech stack
+WebRTC: a real-time communication protocol that enables peer-to-peer data sharing directly between web browsers.
+
+PhaserJS: a JavaScript game development framework with support for animation, physics, etc.
+
+## Site
 https://saimu-31d983bbe10c.herokuapp.com/
 
 ## Development
-`npm run start`
+- `npm run start`
 
 ## Deployment (heroku)
-`heroku login`
-`git push heroku main`
+- `heroku login`
+- `git push heroku main`
+- Don't forget to enable dynos at heroku.
 
-## Tech
-- WebRTC: A free, open-source project that provides real-time communication capabilities for web applications.
-- Node.js: A JavaScript runtime environment that allows server-side execution of JavaScript code.
-- Express.js: A minimal and flexible web application framework for Node.js.
-- Socket.io: A library that enables real-time, bidirectional communication between web clients and servers.
-- Heroku: A cloud platform that allows you to deploy, manage, and scale applications.
-- Nodemon: Restarts node server when code changes are detected to make it easier for development.
-
-## Usage
-Two devices can access the URL and be "linked" and receive information from each other without storing it in a database
+## Technologies Used
+- WebRTC
+- Node.js
+- Express
+- Heroku
