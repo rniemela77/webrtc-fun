@@ -38,6 +38,8 @@ class Demo extends Phaser.Scene {
     peerConnection.ondatachannel = (event) => {
       console.log("Data channel created!");
       const receiveChannel = event.channel;
+
+      this.createPhysicsSquare(200, 200, false); // drop a block if both players are connected
       receiveChannel.onmessage = (event) => {
         console.log("Received message:", event.data);
         const { x, y } = JSON.parse(event.data);
