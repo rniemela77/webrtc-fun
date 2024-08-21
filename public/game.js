@@ -16,13 +16,13 @@ class Demo extends Phaser.Scene {
     this.setupWebRTC();
   }
 
-  createPhysicsSquare(x, y) {
+  createPhysicsSquare(x, y, isLocal = true) {
     console.log("Creating physics square at:", x, y);
     // Create a physics-enabled square
     this.matter.add.rectangle(x, y, 50, 50, { restitution: 0.5 });
 
-    // Send the square's coordinates through the data channel if it exists
-    if (this.dataChannel && this.dataChannel.readyState === "open") {
+    // Send the square's coordinates through the data channel if it is a local creation
+    if (isLocal && this.dataChannel && this.dataChannel.readyState === "open") {
       const message = JSON.stringify({ x, y });
       this.dataChannel.send(message);
       console.log("Sent message:", message);
@@ -41,7 +41,7 @@ class Demo extends Phaser.Scene {
       receiveChannel.onmessage = (event) => {
         console.log("Received message:", event.data);
         const { x, y } = JSON.parse(event.data);
-        this.createPhysicsSquare(x, y);
+        this.createPhysicsSquare(x, y, false); // Indicate that this is a remote creation
       };
     };
 
@@ -83,7 +83,6 @@ class Demo extends Phaser.Scene {
       peerConnection.setLocalDescription(offer);
       socket.emit("offer", offer);
     });
-
 
     // Listen for user count updates
     socket.on("user-count", (count) => {
