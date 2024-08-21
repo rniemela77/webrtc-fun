@@ -83,6 +83,12 @@ class Demo extends Phaser.Scene {
       peerConnection.setLocalDescription(offer);
       socket.emit("offer", offer);
     });
+
+
+    // Listen for user count updates
+    socket.on("user-count", (count) => {
+      document.getElementById("user-count").innerText = `Connected Users: ${count}`;
+    });
   }
 }
 

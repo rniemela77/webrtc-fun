@@ -8,6 +8,8 @@ const io = socketIo(server);
 
 const PORT = process.env.PORT || 3000;
 
+let connectedUsers = 0; // Variable to keep track of connected users
+
 // Serve static files from the 'public' directory
 app.use(express.static('public'));
 
@@ -18,8 +20,13 @@ app.get('/', (req, res) => {
 
 // Handle socket connections
 io.on('connection', (socket) => {
+  connectedUsers++;
   console.log('a user connected');
+  io.emit('user-count', connectedUsers); // Emit user count
 
+  if (connectedUsers === 2) {
+    console.log('Two users are connected');
+  }
 
   socket.on('offer', (offer) => {
     socket.broadcast.emit('offer', offer);
@@ -34,7 +41,9 @@ io.on('connection', (socket) => {
   });
   
   socket.on('disconnect', () => {
+    connectedUsers--;
 	console.log('user disconnected');
+    io.emit('user-count', connectedUsers); // Emit user count
   });
 
   // Add your custom socket event handlers here

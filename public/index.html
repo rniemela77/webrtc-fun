@@ -1,19 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Phaser.js WebRTC Game</title>
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
+    <script
+      src="https://cdn.socket.io/4.7.5/socket.io.min.js"
+      integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
+      crossorigin="anonymous"
+    ></script>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 
     <!-- <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script> -->
     <script src="/game.js"></script>
+  </head>
+  
+  <body>
+    <div>
+      <h1>Tuggle</h1>
 
-</head>
-<body>
-    <h1>Phaser.js WebRTC Game</h1>
+      <div id="user-count">Connected Users: 0</div>
 
-    <div id="game-container"></div>
-</body>
+      <div id="game-container"></div>
+    </div>
+  </body>
 </html>
