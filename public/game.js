@@ -49,28 +49,32 @@ class Demo extends Phaser.Scene {
     this.dataChannel = peerConnection.createDataChannel("sendChannel");
 
     // Handle signaling for WebRTC
-    socket.on("offer", async (offer) => {
+    const handleOffer = async (offer) => {
       await peerConnection.setRemoteDescription(
         new RTCSessionDescription(offer)
       );
       const answer = await peerConnection.createAnswer();
       await peerConnection.setLocalDescription(answer);
       socket.emit("answer", answer);
-    });
+    };
 
-    socket.on("answer", async (answer) => {
+    const handleAnswer = async (answer) => {
       await peerConnection.setRemoteDescription(
         new RTCSessionDescription(answer)
       );
-    });
+    };
 
-    socket.on("ice-candidate", async (candidate) => {
+    const handleIceCandidate = async (candidate) => {
       try {
         await peerConnection.addIceCandidate(candidate);
       } catch (e) {
         console.error("Error adding received ice candidate", e);
       }
-    });
+    };
+
+    socket.on("offer", handleOffer);
+    socket.on("answer", handleAnswer);
+    socket.on("ice-candidate", handleIceCandidate);
 
     peerConnection.onicecandidate = (event) => {
       if (event.candidate) {
@@ -79,15 +83,50 @@ class Demo extends Phaser.Scene {
     };
 
     // Create an offer to connect to the other peer
-    peerConnection.createOffer().then((offer) => {
-      peerConnection.setLocalDescription(offer);
+    const createOffer = async () => {
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
       socket.emit("offer", offer);
-    });
+    };
+
+    createOffer();
 
     // Listen for user count updates
     socket.on("user-count", (count) => {
-      document.getElementById("user-count").innerText = `Connected Users: ${count}`;
+      document.getElementById(
+        "user-count"
+      ).innerText = `Connected Users: ${count}`;
     });
+
+    // Listen for ready event
+    socket.on("ready", () => {
+      const readyMessage = document.createElement("div");
+      readyMessage.id = "ready-message";
+      readyMessage.innerText = "Both players are ready!";
+      readyMessage.style.position = "absolute";
+      readyMessage.style.top = "50%";
+      readyMessage.style.left = "50%";
+      readyMessage.style.transform = "translate(-50%, -50%)";
+      readyMessage.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
+      readyMessage.style.color = "white";
+      readyMessage.style.padding = "20px";
+      readyMessage.style.borderRadius = "10px";
+      document.body.appendChild(readyMessage);
+
+      // Remove the message after a few seconds
+      setTimeout(() => {
+        document.body.removeChild(readyMessage);
+      }, 3000);
+    });
+
+    // Ensure both peers are connected before showing the ready message
+    const checkConnection = () => {
+      if (peerConnection.iceConnectionState === 'connected' || peerConnection.iceConnectionState === 'completed') {
+        socket.emit('ready');
+      }
+    };
+
+    peerConnection.oniceconnectionstatechange = checkConnection;
   }
 }
 

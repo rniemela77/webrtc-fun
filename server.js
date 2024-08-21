@@ -26,6 +26,7 @@ io.on('connection', (socket) => {
 
   if (connectedUsers === 2) {
     console.log('Two users are connected');
+    io.emit('ready'); // Emit ready event
   }
 
   socket.on('offer', (offer) => {
