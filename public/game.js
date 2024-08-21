@@ -5,21 +5,60 @@ class Demo extends Phaser.Scene {
   }
 
   create() {
+    // boundaries
+    this.matter.world.setBounds(0, 0, width, height);
+    // physics
+
+
+
     console.log("Creating scene...");
+    
     this.input.on("pointerdown", (pointer) => {
       console.log("Pointer down at:", pointer.x, pointer.y);
-      this.createPhysicsSquare(pointer.x, pointer.y);
+      const xPercent = (pointer.x / this.scale.width) * 100;
+      const yPercent = (pointer.y / this.scale.height) * 100;
+      this.createPhysicsSquare(xPercent, yPercent);
+    });
+
+    // every 1s
+    this.time.addEvent({
+      delay: 1000,
+      loop: true,
+      callback: () => {
+        // const xPercent = Math.random() * 100;
+        // const yPercent = Math.random() * 100;
+        // this.createPhysicsSquare(xPercent, yPercent);
+      },
     });
 
     this.setupWebRTC();
   }
 
-  createPhysicsSquare(x, y, isLocal = true) {
+  createPhysicsSquare(xPercent, yPercent, isLocal = true) {
+    const x = (xPercent / 100) * this.scale.width;
+    const y = (yPercent / 100) * this.scale.height;
+    const squareSize = this.scale.width / 10;
     console.log("Creating physics square at:", x, y);
-    this.matter.add.rectangle(x, y, 50, 50, { restitution: 0.5 });
+    const square = this.matter.add.image(x, y, "particle", null, {
+      shape: {
+        type: "circle",
+        radius: squareSize / 2,
+      },
+    });
+
+    // physics
+    square.setFriction(0.005);
+    square.setBounce(0.8);
+    square.setMass(20000);
+
+    // if not local, add a random force
+    if (!isLocal) {
+      // make it red
+      square.setTint(0xff0000);
+    }
 
     if (isLocal && this.dataChannel?.readyState === "open") {
-      const message = JSON.stringify({ x, y });
+      const message = JSON.stringify({ xPercent, yPercent });
       this.dataChannel.send(message);
       console.log("Sent message:", message);
     }
@@ -37,8 +76,8 @@ class Demo extends Phaser.Scene {
       this.createPhysicsSquare(200, 200, false);
       receiveChannel.onmessage = (event) => {
         console.log("Received message:", event.data);
-        const { x, y } = JSON.parse(event.data);
-        this.createPhysicsSquare(x, y, false);
+        const { xPercent, yPercent } = JSON.parse(event.data);
+        this.createPhysicsSquare(xPercent, yPercent, false);
       };
     };
 
