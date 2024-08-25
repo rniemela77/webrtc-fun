@@ -1,175 +1,175 @@
-class Demo extends Phaser.Scene {
+class Example extends Phaser.Scene {
   preload() {
-    console.log("Preloading assets...");
-    this.load.image("particle", "/circle.png"); // Ensure the path is correct
+    this.load.image("p1unit", "circle.png");
   }
 
   create() {
-    // boundaries
-    this.matter.world.setBounds(0, 0, width, height);
-    // physics
+    this.p1unit = this.physics.add.sprite(width / 2, height / 2, "p1unit");
+    this.p1unit.setScale(0.5);
+    this.p1unit.body.setBounce(0.2, 0.2);
+    this.p1unit.body.setMaxVelocity(400, 400);
+    this.p1unit.body.setGravity(0, 200);
 
+    // this.add.particles(400, 200, "star", {
+    //   speed: 100,
+    //   lifespan: 3000,
+    //   gravityY: 200,
+    // });
 
-
-    console.log("Creating scene...");
-    
-    this.input.on("pointerdown", (pointer) => {
-      console.log("Pointer down at:", pointer.x, pointer.y);
-      const xPercent = (pointer.x / this.scale.width) * 100;
-      const yPercent = (pointer.y / this.scale.height) * 100;
-      this.createPhysicsSquare(xPercent, yPercent);
-    });
-
-    // every 1s
-    this.time.addEvent({
-      delay: 1000,
-      loop: true,
-      callback: () => {
-        // const xPercent = Math.random() * 100;
-        // const yPercent = Math.random() * 100;
-        // this.createPhysicsSquare(xPercent, yPercent);
-      },
-    });
-
-    this.setupWebRTC();
+    this.generateLand();
   }
 
-  createPhysicsSquare(xPercent, yPercent, isLocal = true) {
-    const x = (xPercent / 100) * this.scale.width;
-    const y = (yPercent / 100) * this.scale.height;
-    const squareSize = this.scale.width / 10;
-    console.log("Creating physics square at:", x, y);
-    const square = this.matter.add.image(x, y, "particle", null, {
-      shape: {
-        type: "circle",
-        radius: squareSize / 2,
-      },
-    });
+  update() {
+    this.p1unit.setAcceleration(0, 0);
 
-    // physics
-    square.setFriction(0.005);
-    square.setBounce(0.8);
-    square.setMass(20000);
-
-    // if not local, add a random force
-    if (!isLocal) {
-      // make it red
-      square.setTint(0xff0000);
+    // if mouse is down
+    if (this.input.activePointer.isDown) {
+      this.p1unit.setAccelerationY(-1000);
     }
 
-    if (isLocal && this.dataChannel?.readyState === "open") {
-      const message = JSON.stringify({ xPercent, yPercent });
-      this.dataChannel.send(message);
-      console.log("Sent message:", message);
+    // p1unit rotate
+    this.p1unit.rotation = this.p1unit.body.velocity.y / 1000;
+
+    this.updateLand();
+  }
+
+
+  // LAND
+  generateLand ()
+    {
+        // this.add.image(400, 300, 'sky').setScrollFactor(0);
+
+        this.graphics = this.add.graphics();
+
+        this.topPath = new Phaser.Curves.Path(0, Phaser.Math.Between(200, 100));
+        this.bottomPath = new Phaser.Curves.Path(0, Phaser.Math.Between(400, 500));
+
+        // this.p1unit = this.add.image(100, 300, 'p1unit');
+
+        // this.input.on('pointermove', pointer => {
+
+            // this.p1unit.x = pointer.worldX;
+            // this.p1unit.y = pointer.worldY;
+
+        // });
+
+        //  Create a random land which is 1000px long (800 for our screen size + 200 buffer)
+
+        let ty = Phaser.Math.Between(200, 100);
+        let by = Phaser.Math.Between(400, 500);
+
+        for (let x = 200; x <= 1000; x += 200)
+        {
+            this.topPath.lineTo(x, ty);
+            this.bottomPath.lineTo(x, by);
+
+            ty = Phaser.Math.Between(200, 100);
+            by = Phaser.Math.Between(400, 500);
+        }
+
+        this.offset = 0;
     }
-  }
 
-  setupWebRTC() {
-    console.log("Setting up WebRTC...");
-    const peerConnection = new RTCPeerConnection();
-    const socket = io();
+    updateLand ()
+    {
+        //  Scroll the camera at a fixed speed
+        const speed = 2;
 
-    peerConnection.ondatachannel = (event) => {
-      console.log("Data channel created!");
-      const receiveChannel = event.channel;
+        this.cameras.main.scrollX += speed;
+        this.p1unit.x += speed;
 
-      this.createPhysicsSquare(200, 200, false);
-      receiveChannel.onmessage = (event) => {
-        console.log("Received message:", event.data);
-        const { xPercent, yPercent } = JSON.parse(event.data);
-        this.createPhysicsSquare(xPercent, yPercent, false);
-      };
-    };
 
-    this.dataChannel = peerConnection.createDataChannel("sendChannel");
+        this.offset += speed;
 
-    const handleOffer = async (offer) => {
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-      const answer = await peerConnection.createAnswer();
-      await peerConnection.setLocalDescription(answer);
-      socket.emit("answer", answer);
-    };
+        //  Every 200 pixels we'll generate a new chunk of land
+        if (this.offset >= 200)
+        {
+            //  We need to generate a new section of the land as we've run out
+            let ty = Phaser.Math.Between(200, 100);
+            let by = Phaser.Math.Between(400, 500);
 
-    const handleAnswer = async (answer) => {
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-    };
+            const topEnd = this.topPath.getEndPoint();
+            const bottomEnd = this.bottomPath.getEndPoint();
 
-    const handleIceCandidate = async (candidate) => {
-      try {
-        await peerConnection.addIceCandidate(candidate);
-      } catch (e) {
-        console.error("Error adding received ICE candidate", e);
-      }
-    };
+            this.topPath.lineTo(topEnd.x + 200, ty);
+            this.bottomPath.lineTo(bottomEnd.x + 200, by);
 
-    socket.on("offer", handleOffer);
-    socket.on("answer", handleAnswer);
-    socket.on("ice-candidate", handleIceCandidate);
+            this.offset = 0;
+        }
 
-    peerConnection.onicecandidate = (event) => {
-      if (event.candidate) {
-        socket.emit("ice-candidate", event.candidate);
-      }
-    };
+        //  Get the position of the p1unit on the path
+        const x = this.p1unit.x / (1000 + this.cameras.main.scrollX - this.offset);
 
-    const createOffer = async () => {
-      const offer = await peerConnection.createOffer();
-      await peerConnection.setLocalDescription(offer);
-      socket.emit("offer", offer);
-    };
+        //  These vec2s contain the x/y of the p1unit on the path
+        //  By checking the p1unit.y value against the top.y and bottom.y we know if it's hit the wall or not
+        const top = this.topPath.getPoint(x);
+        const bottom = this.bottomPath.getPoint(x);
 
-    createOffer();
+        //  Draw it
+        this.graphics.clear();
 
-    socket.on("user-count", (count) => {
-      document.getElementById("user-count").innerText = `Connected Users: ${count}`;
-    });
+        //  This will give a debug draw style with just lines:
 
-    socket.on("ready", () => {
-      const readyMessage = document.createElement("div");
-      readyMessage.id = "ready-message";
-      readyMessage.innerText = "Both players are ready!";
-      readyMessage.style.position = "absolute";
-      readyMessage.style.top = "50%";
-      readyMessage.style.left = "50%";
-      readyMessage.style.transform = "translate(-50%, -50%)";
-      readyMessage.style.backgroundColor = "rgba(0, 0, 0, 0.8)";
-      readyMessage.style.color = "white";
-      readyMessage.style.padding = "20px";
-      readyMessage.style.borderRadius = "10px";
-      document.body.appendChild(readyMessage);
+        this.graphics.lineStyle(1, 0x000000, 1);
+        this.topPath.draw(this.graphics);
+        this.bottomPath.draw(this.graphics);
 
-      setTimeout(() => document.body.removeChild(readyMessage), 3000);
-    });
+        //  And this will give a filled Graphics landscape:
+        this.drawLand(this.topPath, 0);
+        this.drawLand(this.bottomPath, 600);
 
-    peerConnection.oniceconnectionstatechange = () => {
-      if (peerConnection.iceConnectionState === 'connected' || peerConnection.iceConnectionState === 'completed') {
-        socket.emit('ready');
-      }
-    };
-  }
+        //  Draw the markers to show where on the path we are
+        this.graphics.fillStyle(0x00ff00);
+        this.graphics.fillRect(top.x - 2, top.y - 2, 5, 5);
+        this.graphics.fillRect(bottom.x - 2, bottom.y - 2, 5, 5);
+
+        // check if p1unit is hitting the wall
+        if (this.p1unit.y < top.y + 10 || this.p1unit.y > bottom.y - 10) {
+          this.p1unit.setTint(0xff0000);
+        } else {
+          this.p1unit.clearTint();
+        }
+    }
+
+    drawLand (path, offsetY)
+    {
+        const points = [ { x: 0, y: offsetY }];
+
+        let lastX;
+
+        for (let i = 0; i < path.curves.length; i++)
+        {
+            const curve = path.curves[i];
+
+            points.push(curve.p0, curve.p1);
+
+            lastX = curve.p1.x;
+        }
+
+        points.push({ x: lastX, y: offsetY });
+
+        // grey
+        this.graphics.fillStyle(0x333333);
+        this.graphics.fillPoints(points, true, true);
+    }
 }
 
-const width = window.innerWidth * window.devicePixelRatio;
-const height = window.innerHeight * window.devicePixelRatio;
+let width = window.innerWidth;
+let height = window.innerHeight;
 
 const config = {
   type: Phaser.AUTO,
+  width: width,
+  height: height,
+  pixelArt: true,
   parent: "phaser-example",
-  width,
-  height,
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-  },
   physics: {
-    default: "matter",
-    matter: {
-      debug: true,
-      gravity: { y: 0.5 },
+    default: "arcade",
+    arcade: {
+      debug: false,
     },
   },
-  scene: Demo,
-  backgroundColor: "#8ccff",
+  scene: Example,
 };
 
 const game = new Phaser.Game(config);
