@@ -1,125 +1,147 @@
 class Example extends Phaser.Scene {
   preload() {
-    this.load.image("vehicle", "circle.png");  // Replace with a square image
+    this.load.image("unit", "circle.png"); // Replace with a square image
   }
 
   create() {
-    this.generateLand();
+    // create unit sprite
+    this.p1unit = this.physics.add
+      .sprite(width / 6, height / 3, "unit")
+      // .setDrag(100)
+      .setTint(0x7777ff)
+      // .setCollideWorldBounds(true)
+      // .setScale(0.5);
+    this.p2unit = this.physics.add
+      .sprite((width / 6) * 5, height / 3, "unit")
+      // .setDrag(100)
+      .setTint(0xff7777);
+      // .setCollideWorldBounds(true)
+      // .setScale(0.5);
 
-    this.vehicle = this.add.sprite(width / 2, height - height / 4, "vehicle"); // Set initial y-position
-    this.vehicle.setScale(0.5);  // Scale down the vehicle size
+    // create unit group
+    this.units = this.physics.add.group();
+    this.units.add(this.p1unit);
+    this.units.add(this.p2unit);
+
+    // when unit collides with eachother
+    this.physics.add.collider(this.units, this.units);
+    
+
+
+
+    // full width rectangle
+    this.rect = this.add.rectangle(
+      width / 2,
+      height,
+      width,
+      height / 2,
+      0x222222
+    );
+    this.physics.add.existing(this.rect, true); // Enable physics for the rectangle
+
+    // gravity
+    this.physics.world.gravity.y = 800;
+
+    // Add collision detection
+    this.physics.add.collider(this.p1unit, this.rect);
+    this.physics.add.collider(this.p2unit, this.rect);
+
+    this.handleActions();
+
+    this.makeAI(this.p2unit, this.p1unit);
   }
 
-  update() {
-    this.updateLand();
-    this.handleVehicleMovement();
-  }
-
-  generateLand() {
-    this.graphics = this.add.graphics();
-
-    this.leftPath = new Phaser.Curves.Path(Phaser.Math.Between(100, 200), 0);
-    this.rightPath = new Phaser.Curves.Path(Phaser.Math.Between(400, 500), 0);
-
-    let lx = Phaser.Math.Between(100, 200);
-    let rx = Phaser.Math.Between(400, 500);
-
-    for (let y = 200; y <= 1000; y += 200) {
-      this.leftPath.lineTo(lx, y);
-      this.rightPath.lineTo(rx, y);
-
-      lx = Phaser.Math.Between(100, 200);
-      rx = Phaser.Math.Between(400, 500);
-    }
-
-    this.offset = 0;
-  }
-
-  updateLand() {
-    const speed = 2;
-
-    this.cameras.main.scrollY += speed;
-    this.offset += speed;
-
-    if (this.offset >= 200) {
-      let lx = Phaser.Math.Between(100, 200);
-      let rx = Phaser.Math.Between(400, 500);
-
-      const leftEnd = this.leftPath.getEndPoint();
-      const rightEnd = this.rightPath.getEndPoint();
-
-      this.leftPath.lineTo(lx, leftEnd.y + 200);
-      this.rightPath.lineTo(rx, rightEnd.y + 200);
-
-      this.offset = 0;
-    }
-
-    const y = (this.vehicle.y - this.cameras.main.scrollY) / (1000 + this.cameras.main.scrollY - this.offset);
-
-    const left = this.leftPath.getPoint(y);
-    const right = this.rightPath.getPoint(y);
-
-    this.graphics.clear();
-
-    this.graphics.lineStyle(1, 0x000000, 1);
-    this.leftPath.draw(this.graphics);
-    this.rightPath.draw(this.graphics);
-
-    this.drawLand(this.leftPath, 0);
-    this.drawLand(this.rightPath, 600);
-
-    // draw square on land at the y position of the vehicle
-    this.graphics.fillStyle(0x00ffff);
-    this.graphics.fillRect(left.x - 5, this.vehicle.y, 10, 10);
-    this.graphics.fillRect(right.x - 5, this.vehicle.y, 10, 10);
-  }
-
-  handleVehicleMovement() {
-    this.input.on('pointerdown', pointer => {
-      if (pointer.x < this.vehicle.x) {
-        // Steer left with a tween
-        this.tweens.add({
-          targets: this.vehicle,
-          x: this.vehicle.x - 50,
-          ease: 'Power2',
-          duration: 300,
-        });
-      } else if (pointer.x > this.vehicle.x) {
-        // Steer right with a tween
-        this.tweens.add({
-          targets: this.vehicle,
-          x: this.vehicle.x + 50,
-          ease: 'Power2',
-          duration: 300,
-        });
-      }
+  makeAI(unit, attackUnit) {
+    this.time.addEvent({
+      delay: 300,
+      callback: function () {
+        if (unit.body.touching.down) {
+          this.jump(unit);
+        } else if (Math.random() < 0.5) {
+          this.attack(unit, attackUnit);
+        }
+      },
+      callbackScope: this,
+      loop: true,
     });
-
-    // Keep the vehicle within screen bounds
-    this.vehicle.x = Phaser.Math.Clamp(this.vehicle.x, 0, width);
-
-    // move the vehicle down
-    this.vehicle.y += 2;
   }
 
-  drawLand(path, offsetX) {
-    const points = [{ x: offsetX, y: 0 }];
+  handleActions() {
 
-    let lastY;
+    this.input.keyboard.on(
+      "keydown-SPACE",
+      function (event) {
+        if (!this.p1unit.body.touching.down) {
+          this.attack(this.p1unit, this.p2unit);
+        } else {
+          this.jump(this.p1unit);
+        }
+      },
+      this
+    );
 
-    for (let i = 0; i < path.curves.length; i++) {
-      const curve = path.curves[i];
-
-      points.push(curve.p0, curve.p1);
-
-      lastY = curve.p1.y;
-    }
-
-    points.push({ x: offsetX, y: lastY });
-
-    this.graphics.fillStyle(0x333333);
-    this.graphics.fillPoints(points, true, true);
+    this.input.on(
+      "pointerdown",
+      function (pointer) {
+        if (!this.p2unit.body.touching.down) {
+          this.attack(this.p2unit, this.p1unit);
+        } else {
+          this.jump(this.p2unit);
+        }
+      },
+      this
+    );
   }
+
+  attack(unit, target) {
+    const direction = target.x - unit.x;
+    const velocity = 250;
+
+    // disable gravity
+    unit.setGravityY(0);
+    // move the unit towards the target
+    unit.setVelocityX(direction > 0 ? velocity : -velocity);
+
+    // after 0.5 seconds, stop the unit
+    this.time.addEvent({
+      delay: 500,
+      callback: function () {
+        unit.setVelocityX(0);
+        unit.setGravityY(800);
+      },
+      callbackScope: this,
+      loop: false,
+    });
+  }
+
+  handleJump() {
+    this.cursors = this.input.keyboard.createCursorKeys();
+
+    // on pressing space, jump
+    this.input.keyboard.on(
+      "keydown-SPACE",
+      function (event) {
+        this.jump(this.p1unit);
+      },
+      this
+    );
+
+    // mouse
+    this.input.on(
+      "pointerdown",
+      function (pointer) {
+        this.jump(this.p2unit);
+      },
+      this
+    );
+  }
+
+  jump(unit) {
+    const height = 600;
+    unit.setVelocityY(-height);
+  }
+
+  update() {}
 }
 
 let width = window.innerWidth;
