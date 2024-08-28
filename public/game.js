@@ -1,81 +1,77 @@
-class Example extends Phaser.Scene {
-  preload() {
-    this.load.image("circle", "circle.png"); // Replace with a square image if needed
-    this.load.audio("soundEffect", "whoosh.wav");
-  }
+const VelocityFromRotation = Phaser.Physics.Arcade.ArcadePhysics.prototype.velocityFromRotation;
 
-  create() {
-    // Add a grid
-    const graphics = this.add.graphics();
-    graphics.lineStyle(1, 0x8888ff, 0.3);
-    for (let i = 0; i < window.innerWidth; i += 20) {
-      graphics.moveTo(i, 0);
-      graphics.lineTo(i, window.innerHeight);
+class Racer extends Phaser.Scene {
+    constructor() {
+        super({ key: 'Racer' });
     }
-    for (let i = 0; i < window.innerHeight; i += 20) {
-      graphics.moveTo(0, i);
-      graphics.lineTo(window.innerWidth, i);
+
+    preload() {
+        this.load.image('soil', 'assets/textures/soil.png');
+        this.load.image('car', 'assets/sprites/car-yellow.png');
     }
-    graphics.strokePath();
 
-    this.vehicle = this.physics.add.image(100, 100, "circle");
+    create() {
+        this.ground = this.add.tileSprite(width / 2, height / 2, 512, 512, 'soil').setScrollFactor(0, 0).setAlpha(0.1);
 
-    // Set up camera
-    this.cameras.main.setZoom(1.5);
-    this.cameras.main.startFollow(this.vehicle, true, 0.9, 0.9);
-    
-    // Set initial velocity and acceleration
-    this.acceleration = 200; // Adjust this value for desired acceleration
-    // max acceleration
-    this.vehicle.setMaxVelocity(200); // Adjust this value for desired max speed
-    this.vehicle.setAcceleration(0, 0);
-    // this.vehicle.setDrag(0.95); // To simulate friction and reduce acceleration over time
-    this.vehicle.setAngularVelocity(0);
-    
-    // Click on the right side of the screen to rotate right, left side to rotate left
-    this.input.on("pointerdown", (pointer) => {
-      if (pointer.x > window.innerWidth / 2) {
-        this.vehicle.setAngularVelocity(100); // Adjust this value for desired steering speed
-      } else {
-        this.vehicle.setAngularVelocity(-100); // Adjust this value for desired steering speed
-      }
-    });
-    
-    // Stop steering when mouse is released
-    this.input.on("pointerup", () => {
-      this.vehicle.setAngularVelocity(0);
-    });
-  }
+        this.car = this.physics.add.image(100, 100, 'car').setAngle(-90);
+        this.car.body.angularDrag = 120;
+        this.car.body.maxSpeed = 1024;
+        this.car.body.setSize(64, 64, true);
+        
+        this.throttle = 0;
 
-  update() {
-    // Accelerate the vehicle in the direction it's facing
-    const angle = this.vehicle.rotation;
-    const x = Math.cos(angle) * this.acceleration;
-    const y = Math.sin(angle) * this.acceleration;
-    
-    this.vehicle.setAcceleration(x, y);
+        this.cursorKeys = this.input.keyboard.createCursorKeys();
+        this.cameras.main.startFollow(this.car);
+    }
 
-    // Rotate the camera to match the vehicle's rotation
-    this.cameras.main.rotation = -this.vehicle.rotation - Math.PI / 2;
-  }
+    update(time, delta) {
+        const { left, right, up, down } = this.cursorKeys;
+
+        if (up.isDown) {
+            this.throttle += 0.5 * delta;
+        } else if (down.isDown) {
+            this.throttle -= 0.5 * delta;
+        }
+
+        this.throttle = Phaser.Math.Clamp(this.throttle, -64, 1024);
+
+        if (left.isDown) {
+            this.car.body.setAngularAcceleration(-360);
+        } else if (right.isDown) {
+            this.car.body.setAngularAcceleration(360);
+        } else {
+            this.car.body.setAngularAcceleration(0);
+        }
+
+        VelocityFromRotation(this.car.rotation, this.throttle, this.car.body.velocity);
+        this.car.body.maxAngular = Phaser.Math.Clamp(90 * this.car.body.speed / 1024, 0, 90);
+
+        const { scrollX, scrollY } = this.cameras.main;
+        this.ground.setTilePosition(scrollX, scrollY);
+
+        // rotate camera to face car
+        this.cameras.main.setRotation(-this.car.rotation - Math.PI / 2);
+        // zoom
+        this.cameras.main.setZoom(2);
+    }
 }
 
 const width = window.innerWidth;
 const height = window.innerHeight;
 
 const config = {
-  type: Phaser.AUTO,
+    type: Phaser.AUTO,
   width: width,
   height: height,
   pixelArt: true,
   parent: "phaser-example",
-  physics: {
+    physics: {
     default: "arcade",
     arcade: {
       debug: false,
     },
   },
-  scene: Example,
+    scene: Racer
 };
 
 const game = new Phaser.Game(config);
