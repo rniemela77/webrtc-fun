@@ -27,6 +27,7 @@ class Racer extends Phaser.Scene {
     this.cursorKeys = this.input.keyboard.createCursorKeys();
     this.cameras.main.startFollow(this.car);
 
+
     // Create obstacle in center
     this.obstacle = this.physics.add.image(width / 2, height / 2, "car").setScale(5.5).setImmovable(true);
 
@@ -39,44 +40,33 @@ class Racer extends Phaser.Scene {
   }
 
   update(time, delta) {
+    // Offset the camera to position the car slightly below the center
+    this.cameras.main.setFollowOffset(
+      // where the car is facing
+      Math.cos(this.car.rotation) * -64,
+      Math.sin(this.car.rotation) * -64
+    );
+
     // Custom wrapping logic for the car
     this.wrapObject(this.car, 16);
-
-    const { left, right, up, down } = this.cursorKeys;
-
-    if (up.isDown) {
-      this.throttle += 0.5 * delta;
-    } else if (down.isDown) {
-      this.throttle -= 0.5 * delta;
-    }
 
     this.throttle = Phaser.Math.Clamp(this.throttle, -64, 1024);
 
     // if pointer is down
     if (this.input.activePointer.isDown) {
-      const pointerStartX = this.input.activePointer.downX;
-
       const currentPointer = this.input.activePointer.x;
 
-      const distance = currentPointer - pointerStartX;
-
-      if (currentPointer > pointerStartX) {
-        this.car.body.setAngularAcceleration(360 * (distance / 100));
-      }
-      if (currentPointer < pointerStartX) {
-        this.car.body.setAngularAcceleration(360 * (distance / 100));
+      // if its on left or right side of teh screen
+      if (currentPointer < width / 2) {
+        this.car.body.setAngularAcceleration(
+          -360 - this.car.body.angularVelocity 
+        );
+      } else if (currentPointer > width / 2) {
+        this.car.body.setAngularAcceleration(360);
       }
 
     } else {
       this.car.body.setAngularAcceleration(0);
-    }
-
-    if (left.isDown) {
-      // this.car.body.setAngularAcceleration(-360);
-    } else if (right.isDown) {
-      // this.car.body.setAngularAcceleration(360);
-    } else {
-      // this.car.body.setAngularAcceleration(0);
     }
 
     VelocityFromRotation(
