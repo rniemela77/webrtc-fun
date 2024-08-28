@@ -19,10 +19,10 @@ class Racer extends Phaser.Scene {
 
     this.car = this.physics.add.image(50, 164, "car").setAngle(-90);
     this.car.body.angularDrag = 120;
-    this.car.body.maxSpeed = 1024;
+    this.car.body.maxSpeed = 300;
     this.car.body.setSize(20, 20, true);
 
-    this.throttle = 0;
+    this.throttle = 300;
 
     this.cursorKeys = this.input.keyboard.createCursorKeys();
     this.cameras.main.startFollow(this.car);
@@ -52,12 +52,31 @@ class Racer extends Phaser.Scene {
 
     this.throttle = Phaser.Math.Clamp(this.throttle, -64, 1024);
 
-    if (left.isDown) {
-      this.car.body.setAngularAcceleration(-360);
-    } else if (right.isDown) {
-      this.car.body.setAngularAcceleration(360);
+    // if pointer is down
+    if (this.input.activePointer.isDown) {
+      const pointerStartX = this.input.activePointer.downX;
+
+      const currentPointer = this.input.activePointer.x;
+
+      const distance = currentPointer - pointerStartX;
+
+      if (currentPointer > pointerStartX) {
+        this.car.body.setAngularAcceleration(360 * (distance / 100));
+      }
+      if (currentPointer < pointerStartX) {
+        this.car.body.setAngularAcceleration(360 * (distance / 100));
+      }
+
     } else {
       this.car.body.setAngularAcceleration(0);
+    }
+
+    if (left.isDown) {
+      // this.car.body.setAngularAcceleration(-360);
+    } else if (right.isDown) {
+      // this.car.body.setAngularAcceleration(360);
+    } else {
+      // this.car.body.setAngularAcceleration(0);
     }
 
     VelocityFromRotation(
@@ -76,6 +95,9 @@ class Racer extends Phaser.Scene {
 
     // Rotate camera to face car
     this.cameras.main.setRotation(-this.car.rotation - Math.PI / 2);
+
+    // zoom
+    this.cameras.main.setZoom(2);
   }
 
   wrapObject(sprite, padding = 0) {
