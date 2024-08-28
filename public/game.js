@@ -33,9 +33,7 @@ class Racer extends Phaser.Scene {
 
     // Car collides with obstacle
     this.physics.add.collider(this.car, this.obstacle, () => {
-      this.throttle = 0;
-      this.car.body.setVelocity(0, 0);
-      this.car.body.setAngularVelocity(0);
+      this.throttle -= 1;
     });
   }
 
