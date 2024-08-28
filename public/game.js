@@ -13,15 +13,27 @@ class Racer extends Phaser.Scene {
     create() {
         this.ground = this.add.tileSprite(width / 2, height / 2, 512, 512, 'soil').setScrollFactor(0, 0).setAlpha(0.1);
 
-        this.car = this.physics.add.image(100, 100, 'car').setAngle(-90);
+        this.car = this.physics.add.image(50, 164, 'car').setAngle(-90);
         this.car.body.angularDrag = 120;
         this.car.body.maxSpeed = 1024;
-        this.car.body.setSize(64, 64, true);
+        this.car.body.setSize(null, null, true);
         
         this.throttle = 0;
 
         this.cursorKeys = this.input.keyboard.createCursorKeys();
         this.cameras.main.startFollow(this.car);
+
+        // create obstacle in center
+        this.obstacle = this.physics.add.image(0, 0, 'car').setScale(5.5);
+        // make immovable
+        this.obstacle.body.immovable = true;
+
+        // car collide with obstacle
+        this.physics.add.collider(this.car, this.obstacle, () => {
+            this.throttle = 0;
+            this.car.body.setVelocity(0, 0);
+            this.car.body.setAngularVelocity(0);
+        });
     }
 
     update(time, delta) {
@@ -52,7 +64,7 @@ class Racer extends Phaser.Scene {
         // rotate camera to face car
         this.cameras.main.setRotation(-this.car.rotation - Math.PI / 2);
         // zoom
-        this.cameras.main.setZoom(2);
+        // this.cameras.main.setZoom(2);
     }
 }
 
@@ -68,7 +80,7 @@ const config = {
     physics: {
     default: "arcade",
     arcade: {
-      debug: false,
+      debug: true,
     },
   },
     scene: Racer
