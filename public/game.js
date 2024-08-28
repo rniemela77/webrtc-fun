@@ -6,34 +6,46 @@ class Example extends Phaser.Scene {
 
   create() {
     this.unit = this.physics.add
-      .image(width / 2 - 250, height / 2, "circle")
+      .image(width / 2 - 250, height / 2 + 50, "circle")
       .setOrigin(0.5)
       .setDepth(1)
-      .setScale(0.75);
+      // .setScale(0.75);
 
-    this.destination = this.add
-      .image(width / 2 - 100, height / 2, "circle")
-      .setOrigin(0.5)
-      .setDepth(1)
-      .setScale(0.1);
+    // this.destination = this.add
+    //   .image(width / 2 - 100, height / 2, "circle")
+    //   .setOrigin(0.5)
+    //   .setDepth(1)
+    //   .setScale(0.1);
 
     // zoom camera on unit
-    // this.cameras.main.startFollow(this.unit);
-    // this.cameras.main.setZoom(1);
+    this.cameras.main.startFollow(this.unit);
+    this.cameras.main.setZoom(0.5);
 
     // this.physics.add.existing(this.unit);
 
     this.input.on("pointerdown", (pointer) => {
-      // Convert the screen coordinates to world coordinates
-      const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+      // if already moving, stop
+      if (this.tweens.isTweening(this.unit)) {
+        this.tweens.killTweensOf(this.unit);
+      }
+      // determine if its to the left of the unit or the right
+      const worldPoint = this.input.activePointer.positionToCamera(
+        this.cameras.main
+      );
+      let dir = worldPoint.x < this.unit.x ? -1 : 1;
 
-      // Set the destination to the world coordinates
-      this.destination.x = worldPoint.x;
-      this.destination.y = worldPoint.y;
+      // lurch the player in that direction (x axis)
+      this.tweens.add({
+        targets: this.unit,
+        x: this.unit.x + dir * 100,
+        duration: 1000,
+        ease: "Power2",
+      });
     });
 
     // on update
     this.events.on("update", () => {
+      return;
       // if unit is somewhat near the destination
       if (
         Phaser.Math.Distance.Between(
@@ -100,6 +112,15 @@ class Example extends Phaser.Scene {
         for (let i = 0; i < row.length; i++) {
           if (row[i] === "x") {
             cells[i].fillColor = 0xff6666;
+            // after 0.3s, return back to normal color
+            this.time.addEvent({
+              delay: 300,
+              callback: () => {
+                cells[i].fillColor = 0x6666ff;
+              },
+            });
+
+
             // this.sound.play('soundEffect')
             // tweak the sound effect
             this.sound.play("soundEffect", {
