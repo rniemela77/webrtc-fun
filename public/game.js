@@ -1,147 +1,124 @@
 class Example extends Phaser.Scene {
   preload() {
-    this.load.image("unit", "circle.png"); // Replace with a square image
+    this.load.image("unit", "circle.png"); // Replace with a square image  this.load.audio('soundEffect', 'path/to/sound/file.mp3');
+    this.load.audio("soundEffect", "whoosh.wav");
   }
 
   create() {
-    // create unit sprite
-    this.p1unit = this.physics.add
-      .sprite(width / 6, height / 3, "unit")
-      // .setDrag(100)
-      .setTint(0x7777ff)
-      // .setCollideWorldBounds(true)
-      // .setScale(0.5);
-    this.p2unit = this.physics.add
-      .sprite((width / 6) * 5, height / 3, "unit")
-      // .setDrag(100)
-      .setTint(0xff7777);
-      // .setCollideWorldBounds(true)
-      // .setScale(0.5);
+    this.unit = this.physics.add
+      .image(width / 2 - 250, height / 2, "circle")
+      .setOrigin(0.5)
+      .setDepth(1)
+      .setScale(0.75);
 
-    // create unit group
-    this.units = this.physics.add.group();
-    this.units.add(this.p1unit);
-    this.units.add(this.p2unit);
+    this.destination = this.add
+      .image(width / 2 - 100, height / 2, "circle")
+      .setOrigin(0.5)
+      .setDepth(1)
+      .setScale(0.1);
 
-    // when unit collides with eachother
-    this.physics.add.collider(this.units, this.units);
-    
+    // zoom camera on unit
+    // this.cameras.main.startFollow(this.unit);
+    // this.cameras.main.setZoom(1);
 
+    // this.physics.add.existing(this.unit);
 
+    this.input.on("pointerdown", (pointer) => {
+      // Convert the screen coordinates to world coordinates
+      const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
 
-    // full width rectangle
-    this.rect = this.add.rectangle(
-      width / 2,
-      height,
-      width,
-      height / 2,
-      0x222222
-    );
-    this.physics.add.existing(this.rect, true); // Enable physics for the rectangle
-
-    // gravity
-    this.physics.world.gravity.y = 800;
-
-    // Add collision detection
-    this.physics.add.collider(this.p1unit, this.rect);
-    this.physics.add.collider(this.p2unit, this.rect);
-
-    this.handleActions();
-
-    this.makeAI(this.p2unit, this.p1unit);
-  }
-
-  makeAI(unit, attackUnit) {
-    this.time.addEvent({
-      delay: 300,
-      callback: function () {
-        if (unit.body.touching.down) {
-          this.jump(unit);
-        } else if (Math.random() < 0.5) {
-          this.attack(unit, attackUnit);
-        }
-      },
-      callbackScope: this,
-      loop: true,
+      // Set the destination to the world coordinates
+      this.destination.x = worldPoint.x;
+      this.destination.y = worldPoint.y;
     });
-  }
 
-  handleActions() {
+    // on update
+    this.events.on("update", () => {
+      // if unit is somewhat near the destination
+      if (
+        Phaser.Math.Distance.Between(
+          this.unit.x,
+          this.unit.y,
+          this.destination.x,
+          this.destination.y
+        ) < 10
+      ) {
+        this.unit.setVelocity(0, 0);
+        return;
+      }
+      // this.unit.x += 1;
+      // move unit towards destination
+      const angle = Phaser.Math.Angle.Between(
+        this.unit.x,
+        this.unit.y,
+        this.destination.x,
+        this.destination.y
+      );
 
-    this.input.keyboard.on(
-      "keydown-SPACE",
-      function (event) {
-        if (!this.p1unit.body.touching.down) {
-          this.attack(this.p1unit, this.p2unit);
-        } else {
-          this.jump(this.p1unit);
-        }
-      },
-      this
-    );
+      this.unit.setVelocity(Math.cos(angle) * 100, Math.sin(angle) * 100);
 
-    this.input.on(
-      "pointerdown",
-      function (pointer) {
-        if (!this.p2unit.body.touching.down) {
-          this.attack(this.p2unit, this.p1unit);
-        } else {
-          this.jump(this.p2unit);
-        }
-      },
-      this
-    );
-  }
+      // rotate the unit
+      this.unit.rotation = angle;
+    });
 
-  attack(unit, target) {
-    const direction = target.x - unit.x;
-    const velocity = 250;
+    this.entrance = this.add
+      .rectangle(width / 2 - 300, height / 2 - 100, 300, 300, 0x9999ff)
+      .setOrigin(0);
+    this.grid = [
+      ["", "", ""],
+      ["x", "", ""],
+      ["", "x", ""],
+      ["", "", "x"],
+      ["x", "x", "x"],
+    ];
 
-    // disable gravity
-    unit.setGravityY(0);
-    // move the unit towards the target
-    unit.setVelocityX(direction > 0 ? velocity : -velocity);
+    // grid cells group
+    this.cells = this.add.group();
 
-    // after 0.5 seconds, stop the unit
+    // show the grid cells
+    for (let i = 0; i < this.grid[0].length; i++) {
+      // create a square
+      this.cells.add(
+        this.add
+          .rectangle(width / 2 + i * 101, height / 2, 100, 100, 0x6666ff)
+          .setOrigin(0)
+      );
+    }
+    let currentStep = 0;
+
+    // every 0.5s
     this.time.addEvent({
       delay: 500,
-      callback: function () {
-        unit.setVelocityX(0);
-        unit.setGravityY(800);
+      loop: true,
+      callback: () => {
+        // get the current row
+        const row = this.grid[currentStep];
+
+        const cells = this.cells.getChildren();
+
+        // show a red square if its an x
+        for (let i = 0; i < row.length; i++) {
+          if (row[i] === "x") {
+            cells[i].fillColor = 0xff6666;
+            // this.sound.play('soundEffect')
+            // tweak the sound effect
+            this.sound.play("soundEffect", {
+              rate: 1 * Math.pow(1.0594630943592953, i),
+              detune: 100,
+              seek: 0,
+            });
+          } else {
+            cells[i].fillColor = 0x6666ff;
+          }
+        }
+
+        currentStep++;
+        if (currentStep >= this.grid.length) {
+          currentStep = 0;
+        }
       },
-      callbackScope: this,
-      loop: false,
     });
   }
-
-  handleJump() {
-    this.cursors = this.input.keyboard.createCursorKeys();
-
-    // on pressing space, jump
-    this.input.keyboard.on(
-      "keydown-SPACE",
-      function (event) {
-        this.jump(this.p1unit);
-      },
-      this
-    );
-
-    // mouse
-    this.input.on(
-      "pointerdown",
-      function (pointer) {
-        this.jump(this.p2unit);
-      },
-      this
-    );
-  }
-
-  jump(unit) {
-    const height = 600;
-    unit.setVelocityY(-height);
-  }
-
-  update() {}
 }
 
 let width = window.innerWidth;

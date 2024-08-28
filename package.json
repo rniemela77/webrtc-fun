@@ -4,7 +4,7 @@
   "description": "PhaserJS with WebRTC",
   "main": "index.js",
   "scripts": {
-    "start": "browser-sync start --server 'public' --files 'public' --port 3000 --no-notify --no-open",
+    "start": "browser-sync start --server 'public' --files 'public' --host '192.168.1.25' --port 3000 --no-notify --no-open",
     "start-server": "nodemon server.js"
   },
   "keywords": [],
