@@ -1,5 +1,4 @@
-const VelocityFromRotation =
-  Phaser.Physics.Arcade.ArcadePhysics.prototype.velocityFromRotation;
+const VelocityFromRotation = Phaser.Physics.Arcade.ArcadePhysics.prototype.velocityFromRotation;
 
 class Racer extends Phaser.Scene {
   constructor() {
@@ -14,55 +13,46 @@ class Racer extends Phaser.Scene {
   create() {
     this.ground = this.add
       .tileSprite(width / 2, height / 2, width, height, "soil")
-      .setScrollFactor(0, 0)
+      .setScrollFactor(1, 1)
       .setAlpha(0.1);
 
     this.car = this.physics.add.image(50, 164, "car").setAngle(-90);
     this.car.body.angularDrag = 120;
-    this.car.body.maxSpeed = 300;
+    this.car.body.maxSpeed = 100;
     this.car.body.setSize(20, 20, true);
 
-    this.throttle = 300;
-
+    this.throttle = 50;
     this.cursorKeys = this.input.keyboard.createCursorKeys();
     this.cameras.main.startFollow(this.car);
 
-
-    // Create obstacle in center
     this.obstacle = this.physics.add.image(width / 2, height / 2, "car").setScale(5.5).setImmovable(true);
-
-    // Car collides with obstacle
     this.physics.add.collider(this.car, this.obstacle, () => {
       this.throttle -= 1;
     });
+
+    // car collides with world bounds
+    this.car.setCollideWorldBounds(true);
+
+    this.setupWebRTC();
   }
 
   update(time, delta) {
-    // Offset the camera to position the car slightly below the center
     this.cameras.main.setFollowOffset(
-      // where the car is facing
       Math.cos(this.car.rotation) * -64,
       Math.sin(this.car.rotation) * -64
     );
 
-    // Custom wrapping logic for the car
-    this.wrapObject(this.car, 16);
-
+    // this.wrapObject(this.car, 16);
     this.throttle = Phaser.Math.Clamp(this.throttle, -64, 1024);
 
-    // if pointer is down
     if (this.input.activePointer.isDown) {
       const currentPointer = this.input.activePointer.x;
 
-      // if its on left or right side of teh screen
       if (currentPointer < width / 2) {
-        this.car.body.setAngularAcceleration(
-          -360 - this.car.body.angularVelocity 
-        );
+        this.car.body.setAngularAcceleration(-360 - this.car.body.angularVelocity);
       } else if (currentPointer > width / 2) {
         this.car.body.setAngularAcceleration(360);
       }
-
     } else {
       this.car.body.setAngularAcceleration(0);
     }
@@ -81,11 +71,18 @@ class Racer extends Phaser.Scene {
     const { scrollX, scrollY } = this.cameras.main;
     this.ground.setTilePosition(scrollX, scrollY);
 
-    // Rotate camera to face car
     this.cameras.main.setRotation(-this.car.rotation - Math.PI / 2);
+    this.cameras.main.setZoom(1);
 
-    // zoom
-    this.cameras.main.setZoom(2);
+    if (this.dataChannel && this.dataChannel.readyState === 'open') {
+      const data = JSON.stringify({
+        x: this.car.x,
+        y: this.car.y,
+        rotation: this.car.rotation
+      });
+      console.log('Sending data:', data);
+      this.dataChannel.send(data);
+    }
   }
 
   wrapObject(sprite, padding = 0) {
@@ -102,6 +99,86 @@ class Racer extends Phaser.Scene {
       sprite.y = height + halfHeight;
     } else if (sprite.y - halfHeight > height + padding) {
       sprite.y = -halfHeight;
+    }
+  }
+
+  setupWebRTC() {
+    const signalingServerUrl = 'http://localhost:3000'; // Update with your signaling server URL
+    const socket = io(signalingServerUrl);
+
+    this.peerConnection = new RTCPeerConnection();
+    this.dataChannel = this.peerConnection.createDataChannel('game-data');
+    
+    this.dataChannel.onopen = () => {
+      console.log('Data channel is open.');
+    };
+
+    this.dataChannel.onclose = () => {
+      console.log('Data channel is closed.');
+    };
+
+    this.dataChannel.onerror = (error) => {
+      console.error('Data channel error:', error);
+    };
+
+    this.peerConnection.onicecandidate = event => {
+      if (event.candidate) {
+        console.log('Sending ICE candidate:', event.candidate);
+        socket.emit('signal', { type: 'ice-candidate', candidate: event.candidate });
+      }
+    };
+
+    this.peerConnection.ondatachannel = event => {
+      const receiveChannel = event.channel;
+      receiveChannel.onmessage = e => {
+        console.log('Received data:', e.data);
+        try {
+          const { x, y, rotation } = JSON.parse(e.data);
+
+          if (!this.otherCar) {
+            // Create a new car for the other player if it doesn't exist
+            this.otherCar = this.physics.add.image(x, y, 'car').setAngle(rotation);
+            this.otherCar.setSize(20, 20, true);
+            this.otherCar.setAlpha(0.7);
+          } else {
+            this.otherCar.setPosition(x, y);
+            this.otherCar.setRotation(rotation);
+          }
+        } catch (error) {
+          console.error('Error parsing received data:', error);
+        }
+      };
+    };
+
+    socket.on('signal', async (data) => {
+      if (data.type === 'offer') {
+        await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer));
+        const answer = await this.peerConnection.createAnswer();
+        await this.peerConnection.setLocalDescription(answer);
+        socket.emit('signal', { type: 'answer', answer });
+      } else if (data.type === 'answer') {
+        await this.peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+      } else if (data.type === 'ice-candidate') {
+        try {
+          await this.peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        } catch (error) {
+          console.error('Error adding received ice candidate', error);
+        }
+      }
+    });
+
+    // Determine if this browser is the initiator
+    const isInitiator = new URLSearchParams(window.location.search).get('initiator') === 'true';
+    if (isInitiator) {
+      this.peerConnection.onnegotiationneeded = async () => {
+        try {
+          const offer = await this.peerConnection.createOffer();
+          await this.peerConnection.setLocalDescription(offer);
+          socket.emit('signal', { type: 'offer', offer });
+        } catch (error) {
+          console.error('Error creating offer', error);
+        }
+      };
     }
   }
 }

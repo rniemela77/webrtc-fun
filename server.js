@@ -1,60 +1,35 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-const PORT = process.env.PORT || 3000;
+app.use(express.static(path.join(__dirname, 'public'))); // Serve static files from the 'public' directory
 
-let connectedUsers = 0; // Variable to keep track of connected users
+let clients = [];
 
-// Serve static files from the 'public' directory
-app.use(express.static('public'));
+io.on('connection', socket => {
+  console.log('New client connected');
+  clients.push(socket);
 
-// Define a route to serve the main HTML file
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/public/index.html');
-});
-
-// Handle socket connections
-io.on('connection', (socket) => {
-  connectedUsers++;
-  console.log('a user connected');
-  io.emit('user-count', connectedUsers); // Emit user count
-
-  if (connectedUsers === 2) {
-    console.log('Two users are connected');
-    io.emit('ready'); // Emit ready event
-  }
-
-  socket.on('offer', (offer) => {
-    socket.broadcast.emit('offer', offer);
+  socket.on('signal', data => {
+    // Broadcast signaling data to all clients except the sender
+    clients.forEach(client => {
+      if (client !== socket) {
+        client.emit('signal', data);
+      }
+    });
   });
 
-  socket.on('answer', (answer) => {
-    socket.broadcast.emit('answer', answer);
-  });
-
-  socket.on('ice-candidate', (candidate) => {
-    socket.broadcast.emit('ice-candidate', candidate);
-  });
-  
   socket.on('disconnect', () => {
-    connectedUsers--;
-	console.log('user disconnected');
-    io.emit('user-count', connectedUsers); // Emit user count
-  });
-
-  // Add your custom socket event handlers here
-  socket.on('message', (msg) => {
-	console.log('message: ' + msg);
-	io.emit('message', msg);
+    console.log('Client disconnected');
+    clients = clients.filter(client => client !== socket);
   });
 });
 
-// Start the server
-server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+server.listen(3000, () => {
+  console.log('Signaling server listening on port 3000');
 });

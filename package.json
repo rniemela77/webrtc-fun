@@ -13,11 +13,13 @@
   "dependencies": {
     "express": "^4.19.2",
     "phaser": "^3.80.1",
+    "simple-peer": "^9.11.1",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5",
     "ws": "^8.7.0"
   },
   "devDependencies": {
+    "@types/simple-peer": "^9.11.8",
     "browser-sync": "^3.0.2",
     "nodemon": "^3.1.4"
   }
