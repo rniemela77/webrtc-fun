@@ -13,14 +13,13 @@ class Racer extends Phaser.Scene {
   create() {
     this.ground = this.add
       .tileSprite(width / 2, height / 2, width, height, "soil")
-      // .setScrollFactor(1, 1)
       .setAlpha(0.1);
 
     this.car = this.physics.add.image(50, 164, "car").setAngle(-90);
     this.car.body.angularDrag = 120;
     this.car.body.maxSpeed = 100;
     this.car.body.setSize(20, 20, true);
-    this.car.setScale(0.5);
+    this.car.setScale(0.2);
 
     this.throttle = 50;
     this.cursorKeys = this.input.keyboard.createCursorKeys();
@@ -31,7 +30,6 @@ class Racer extends Phaser.Scene {
       this.throttle -= 1;
     });
 
-    // car collides with world bounds
     this.car.setCollideWorldBounds(true);
 
     this.setupWebRTC();
@@ -67,9 +65,6 @@ class Racer extends Phaser.Scene {
       0,
       90
     );
-
-    const { scrollX, scrollY } = this.cameras.main;
-    this.ground.setTilePosition(scrollX, scrollY);
 
     this.cameras.main.setRotation(-this.car.rotation - Math.PI / 2);
     this.cameras.main.setZoom(1);
