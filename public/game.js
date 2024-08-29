@@ -13,13 +13,14 @@ class Racer extends Phaser.Scene {
   create() {
     this.ground = this.add
       .tileSprite(width / 2, height / 2, width, height, "soil")
-      .setScrollFactor(1, 1)
+      // .setScrollFactor(1, 1)
       .setAlpha(0.1);
 
     this.car = this.physics.add.image(50, 164, "car").setAngle(-90);
     this.car.body.angularDrag = 120;
     this.car.body.maxSpeed = 100;
     this.car.body.setSize(20, 20, true);
+    this.car.setScale(0.5);
 
     this.throttle = 50;
     this.cursorKeys = this.input.keyboard.createCursorKeys();
@@ -36,22 +37,21 @@ class Racer extends Phaser.Scene {
     this.setupWebRTC();
   }
 
-  update(time, delta) {
+  update() {
     this.cameras.main.setFollowOffset(
-      Math.cos(this.car.rotation) * -64,
-      Math.sin(this.car.rotation) * -64
+      Math.cos(this.car.rotation) * -164,
+      Math.sin(this.car.rotation) * -164
     );
 
-    // this.wrapObject(this.car, 16);
     this.throttle = Phaser.Math.Clamp(this.throttle, -64, 1024);
 
     if (this.input.activePointer.isDown) {
       const currentPointer = this.input.activePointer.x;
 
       if (currentPointer < width / 2) {
-        this.car.body.setAngularAcceleration(-360 - this.car.body.angularVelocity);
+        this.car.body.setAngularAcceleration(-1360);
       } else if (currentPointer > width / 2) {
-        this.car.body.setAngularAcceleration(360);
+        this.car.body.setAngularAcceleration(1360);
       }
     } else {
       this.car.body.setAngularAcceleration(0);
@@ -63,7 +63,7 @@ class Racer extends Phaser.Scene {
       this.car.body.velocity
     );
     this.car.body.maxAngular = Phaser.Math.Clamp(
-      (90 * this.car.body.speed) / 1024,
+      (90 * this.car.body.speed) / 104,
       0,
       90
     );
@@ -84,25 +84,8 @@ class Racer extends Phaser.Scene {
       this.dataChannel.send(data);
     }
   }
-
-  wrapObject(sprite, padding = 0) {
-    const halfWidth = sprite.displayWidth / 2;
-    const halfHeight = sprite.displayHeight / 2;
-
-    if (sprite.x + halfWidth < -padding) {
-      sprite.x = width + halfWidth;
-    } else if (sprite.x - halfWidth > width + padding) {
-      sprite.x = -halfWidth;
-    }
-
-    if (sprite.y + halfHeight < -padding) {
-      sprite.y = height + halfHeight;
-    } else if (sprite.y - halfHeight > height + padding) {
-      sprite.y = -halfHeight;
-    }
-  }
-
   setupWebRTC() {
+
     const signalingServerUrl = 'http://localhost:3000'; // Update with your signaling server URL
     const socket = io(signalingServerUrl);
 
