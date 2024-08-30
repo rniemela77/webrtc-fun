@@ -10,23 +10,31 @@ class Racer extends Phaser.Scene {
 
   create() {
     // Background setup
-    this.background = this.add.tileSprite(
-      0,
-      0,
-      this.game.config.width,
-      this.game.config.height,
-      "background"
-    ).setTint(0x252325); // Adjust tint as needed
+    this.background = this.add
+      .tileSprite(
+        0,
+        0,
+        this.game.config.width,
+        this.game.config.height,
+        "background"
+      )
+      .setTint(0x252325); // Adjust tint as needed
     this.background.setOrigin(0, 0);
 
     // Spaceship setup
-    this.spaceship = this.add.sprite(
-      this.game.config.width / 2,
-      this.game.config.height - 50,
-      "spaceship"
-    )
+    this.spaceship = this.add
+      .sprite(
+        this.game.config.width / 2,
+        this.game.config.height - 50,
+        "spaceship"
+      )
+      .setOrigin(0.5, 0.5);
 
-    this.spaceship.setOrigin(0.5, 0.5);
+    // Movement variables
+    this.spaceshipSpeed = 0;
+    this.maxSpeed = 5;
+    this.acceleration = 0.1;
+    this.deceleration = 0.05;
 
     // Set camera bounds
     this.cameras.main.setBounds(
@@ -66,12 +74,22 @@ class Racer extends Phaser.Scene {
     // Move background
     this.background.tilePositionY -= 5; // Adjust speed as needed
 
-    // Handle spaceship movement
+    // Handle spaceship movement with acceleration
     if (this.cursors.left.isDown) {
-      this.spaceship.x -= 5; // Adjust speed as needed
+      this.spaceshipSpeed = Math.max(
+        this.spaceshipSpeed - this.acceleration,
+        -this.maxSpeed
+      );
     } else if (this.cursors.right.isDown) {
-      this.spaceship.x += 5; // Adjust speed as needed
+      this.spaceshipSpeed = Math.min(
+        this.spaceshipSpeed + this.acceleration,
+        this.maxSpeed
+      );
+    } else {
+      this.spaceshipSpeed *= 1 - this.deceleration; // Decelerate when no input
     }
+
+    this.spaceship.x += this.spaceshipSpeed;
 
     // Keep spaceship within screen bounds
     this.spaceship.x = Phaser.Math.Clamp(
@@ -80,18 +98,14 @@ class Racer extends Phaser.Scene {
       this.game.config.width - 50
     );
 
-    // Rotate camera to match spaceship direction
-    let angle = Phaser.Math.Angle.Between(
-      this.spaceship.x,
-      this.spaceship.y,
-      this.spaceship.x +
-        (this.cursors.right.isDown ? 1 : this.cursors.left.isDown ? -1 : 0),
-      this.spaceship.y
-    );
-    // this.cameras.main.setRotation(angle - Math.PI / 2);
+    // Camera
+    this.cameras.main.startFollow(this.spaceship, true, 0.01, 0.01);
+    this.cameras.main.setZoom(1.3); // Adjust zoom as needed
+
+    // rotate the camera based on the spaceship's speed
+    this.cameras.main.setRotation(this.spaceshipSpeed * 0.012);
   }
 }
-
 
 const width = window.innerWidth;
 const height = window.innerHeight;
