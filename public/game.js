@@ -30,6 +30,10 @@ class Racer extends Phaser.Scene {
       )
       .setOrigin(0.5, 0.5);
 
+    this.spaceship.setDepth(1); // Set spaceship to be above walls
+
+    
+
     // Movement variables
     this.spaceshipSpeed = 0;
     this.maxSpeed = 5;
