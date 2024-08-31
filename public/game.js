@@ -26,7 +26,7 @@ class Racer extends Phaser.Scene {
   loadImages() {
     this.load.image("background", "path/to/background.png");
     this.load.image("spaceship", "path/to/spaceship.png");
-    this.load.image("obstacle", "path/to/obstacle.png");
+    this.load.image("obstacle", "circle.png");
   }
 
   createBackground() {
@@ -51,11 +51,31 @@ class Racer extends Phaser.Scene {
     this.maxSpeed = 5;
     this.acceleration = 0.2;
     this.deceleration = 0.05;
-    this.obstacleSpeed = 5;
     this.backgroundSpeed = 5;
     this.cameraZoom = 1.3;
     this.cameraRotationFactor = 0.012;
     this.spaceshipBoundsPadding = 50;
+    this.obstacleTypes = [
+      {
+        type: "rock",
+        speed: 2,
+        // Tint the obstacle with a red color
+        color: 0xcc6666,
+        scale: 1,
+      },
+      {
+        type: "asteroid",
+        speed: 4,
+        color: 0x6666c6,
+        scale: 0.8,
+      },
+      {
+        type: "satellite",
+        speed: 6,
+        color: 0x66c666,
+        scale: 0.3,
+      },
+    ]
   }
 
   createObstacles() {
@@ -69,6 +89,16 @@ class Racer extends Phaser.Scene {
       obstacle.setTint(0xc66666)
         .setOrigin(0.5, 0)
         .setY(Phaser.Math.Between(0, this.scale.height));
+
+        // Assign a unique speed between 2 and 6 to each obstacle
+        obstacle.speed = Phaser.Math.Between(2, 4);
+
+        // Assign a random obstacle type to each obstacle
+        const obstacleType = Phaser.Math.RND.pick(this.obstacleTypes);
+
+        obstacle.type = obstacleType.type;
+        obstacle.setTint(obstacleType.color);
+        obstacle.setScale(obstacleType.scale);
     });
   }
 
@@ -84,7 +114,7 @@ class Racer extends Phaser.Scene {
 
   updateObstacles() {
     this.obstacles.children.iterate((obstacle) => {
-      obstacle.y += this.obstacleSpeed;
+      obstacle.y += obstacle.speed;
       if (obstacle.y > this.scale.height + obstacle.displayHeight) {
         obstacle.y = -obstacle.displayHeight;
         obstacle.x = Phaser.Math.Between(0, this.scale.width);
