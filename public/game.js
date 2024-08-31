@@ -11,13 +11,13 @@ class Racer extends Phaser.Scene {
     this.createBackground();
     this.createSpaceship();
     this.initializeVariables();
-    this.createWalls();
+    this.createObstacles();
     this.setupCamera();
     this.setupInput();
   }
 
   update() {
-    this.updateWalls();
+    this.updateObstacles();
     this.updateBackground();
     this.updateSpaceshipMovement();
     this.updateCamera();
@@ -26,7 +26,7 @@ class Racer extends Phaser.Scene {
   loadImages() {
     this.load.image("background", "path/to/background.png");
     this.load.image("spaceship", "path/to/spaceship.png");
-    this.load.image("wall", "path/to/wall.png");
+    this.load.image("obstacle", "path/to/obstacle.png");
   }
 
   createBackground() {
@@ -51,22 +51,22 @@ class Racer extends Phaser.Scene {
     this.maxSpeed = 5;
     this.acceleration = 0.2;
     this.deceleration = 0.05;
-    this.wallSpeed = 5;
+    this.obstacleSpeed = 5;
     this.backgroundSpeed = 5;
     this.cameraZoom = 1.3;
     this.cameraRotationFactor = 0.012;
     this.spaceshipBoundsPadding = 50;
   }
 
-  createWalls() {
-    this.walls = this.add.group({
-      key: "wall",
+  createObstacles() {
+    this.obstacles = this.add.group({
+      key: "obstacle",
       repeat: 10,
       setXY: { x: 0, y: 0, stepX: 100 },
     });
 
-    this.walls.children.iterate((wall) => {
-      wall.setTint(0xc66666)
+    this.obstacles.children.iterate((obstacle) => {
+      obstacle.setTint(0xc66666)
         .setOrigin(0.5, 0)
         .setY(Phaser.Math.Between(0, this.scale.height));
     });
@@ -74,7 +74,7 @@ class Racer extends Phaser.Scene {
 
   setupCamera() {
     this.cameras.main.setBounds(0, 0, this.scale.width, this.scale.height);
-    this.cameras.main.startFollow(this.spaceship, true, 0.01, 0.01);
+    this.cameras.main.startFollow(this.spaceship, true, 0.1, 0.1);
     this.cameras.main.setZoom(this.cameraZoom);
   }
 
@@ -82,12 +82,12 @@ class Racer extends Phaser.Scene {
     this.cursors = this.input.keyboard.createCursorKeys();
   }
 
-  updateWalls() {
-    this.walls.children.iterate((wall) => {
-      wall.y += this.wallSpeed;
-      if (wall.y > this.scale.height + wall.displayHeight) {
-        wall.y = -wall.displayHeight;
-        wall.x = Phaser.Math.Between(0, this.scale.width);
+  updateObstacles() {
+    this.obstacles.children.iterate((obstacle) => {
+      obstacle.y += this.obstacleSpeed;
+      if (obstacle.y > this.scale.height + obstacle.displayHeight) {
+        obstacle.y = -obstacle.displayHeight;
+        obstacle.x = Phaser.Math.Between(0, this.scale.width);
       }
     });
   }
