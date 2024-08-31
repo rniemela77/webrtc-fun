@@ -75,7 +75,7 @@ class Racer extends Phaser.Scene {
         color: 0x66c666,
         scale: 0.3,
       },
-    ]
+    ];
   }
 
   createObstacles() {
@@ -86,19 +86,20 @@ class Racer extends Phaser.Scene {
     });
 
     this.obstacles.children.iterate((obstacle) => {
-      obstacle.setTint(0xc66666)
+      obstacle
+        .setTint(0xc66666)
         .setOrigin(0.5, 0)
         .setY(Phaser.Math.Between(0, this.scale.height));
 
-        // Assign a unique speed between 2 and 6 to each obstacle
-        obstacle.speed = Phaser.Math.Between(2, 4);
+      // Assign a unique speed between 2 and 6 to each obstacle
+      obstacle.speed = Phaser.Math.Between(2, 4);
 
-        // Assign a random obstacle type to each obstacle
-        const obstacleType = Phaser.Math.RND.pick(this.obstacleTypes);
+      // Assign a random obstacle type to each obstacle
+      const obstacleType = Phaser.Math.RND.pick(this.obstacleTypes);
 
-        obstacle.type = obstacleType.type;
-        obstacle.setTint(obstacleType.color);
-        obstacle.setScale(obstacleType.scale);
+      obstacle.type = obstacleType.type;
+      obstacle.setTint(obstacleType.color);
+      obstacle.setScale(obstacleType.scale);
     });
   }
 
@@ -119,6 +120,31 @@ class Racer extends Phaser.Scene {
         obstacle.y = -obstacle.displayHeight;
         obstacle.x = Phaser.Math.Between(0, this.scale.width);
       }
+
+      // Collision detection
+      if (
+        Phaser.Geom.Intersects.RectangleToRectangle(
+          this.spaceship.getBounds(),
+          obstacle.getBounds()
+        )
+      ) {
+        switch (obstacle.type) {
+          case "rock":
+            this.spaceship.health -= obstacle.damage;
+            break;
+          case "power-up":
+            this.spaceship.power += obstacle.powerValue;
+            break;
+          case "hazard":
+            this.applyHazardEffect(obstacle.effect);
+            break;
+          default:
+            break;
+        }
+        // Optionally, reset obstacle position after collision
+        obstacle.y = -obstacle.displayHeight;
+        obstacle.x = Phaser.Math.Between(0, this.scale.width);
+      }
     });
   }
 
@@ -128,9 +154,15 @@ class Racer extends Phaser.Scene {
 
   updateSpaceshipMovement() {
     if (this.cursors.left.isDown) {
-      this.spaceshipSpeed = Math.max(this.spaceshipSpeed - this.acceleration, -this.maxSpeed);
+      this.spaceshipSpeed = Math.max(
+        this.spaceshipSpeed - this.acceleration,
+        -this.maxSpeed
+      );
     } else if (this.cursors.right.isDown) {
-      this.spaceshipSpeed = Math.min(this.spaceshipSpeed + this.acceleration, this.maxSpeed);
+      this.spaceshipSpeed = Math.min(
+        this.spaceshipSpeed + this.acceleration,
+        this.maxSpeed
+      );
     } else {
       this.spaceshipSpeed *= 1 - this.deceleration;
     }
@@ -144,7 +176,9 @@ class Racer extends Phaser.Scene {
   }
 
   updateCamera() {
-    this.cameras.main.setRotation(this.spaceshipSpeed * this.cameraRotationFactor);
+    this.cameras.main.setRotation(
+      this.spaceshipSpeed * this.cameraRotationFactor
+    );
   }
 }
 
