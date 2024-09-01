@@ -23,7 +23,32 @@ class Racer extends Phaser.Scene {
     this.updateSpaceshipMovement();
     this.updateCamera();
     this.updateLine();
+    this.checkCollisions();
   }
+
+  checkCollisions() {    
+    // Calculate the t-value based on spaceship.y
+    const t = this.spaceship.y / this.leftPath.getBounds().height;
+    
+    // Clamp t to [0, 1] range
+    const clampedT = Phaser.Math.Clamp(t, 0, 1);
+
+    // Get the point on the path at the calculated t-value
+    const leftPoint = this.leftPath.getPoint(clampedT);
+    const rightPoint = this.rightPath.getPoint(clampedT);
+
+    // Check X positions
+    const leftX = leftPoint.x;
+    const rightX = rightPoint.x;
+
+    // Check if the spaceship is outside the bounds of the path
+    if (this.spaceship.x < leftX || this.spaceship.x > rightX) {
+        this.spaceship.setTint(0xff0000);
+    } else {
+        this.spaceship.clearTint();
+    }
+}
+
 
   createLine() {
     this.graphics = this.add.graphics();
@@ -47,31 +72,31 @@ class Racer extends Phaser.Scene {
   }
 
   updateLine() {
-    this.offset += 1;
-
+    const speed = 2;
+    this.offset += speed;
 
     // Move the land downward by decreasing the y-coordinates
-    this.leftPath.curves.forEach(curve => {
-      curve.p0.y -= 1;
-      curve.p1.y -= 1;
-  });
+    this.leftPath.curves.forEach((curve) => {
+      curve.p0.y += speed;
+      curve.p1.y += speed;
+    });
 
-  this.rightPath.curves.forEach(curve => {
-      curve.p0.y -= 1;
-      curve.p1.y -= 1;
-  });
+    this.rightPath.curves.forEach((curve) => {
+      curve.p0.y += speed;
+      curve.p1.y += speed;
+    });
 
-    //  Every 200 pixels we'll generate a new chunk of land
-    if (this.offset >= 200) {
+    if (this.leftPath.curves[0].p0.y > speed * 200) {
       //  We need to generate a new section of the land as we've run out
-      let lx = Phaser.Math.Between(200, 100);
+      let lx = Phaser.Math.Between(100, 200);
       let rx = Phaser.Math.Between(400, 500);
 
-      const leftEnd = this.leftPath.getEndPoint();
-      const rightEnd = this.rightPath.getEndPoint();
+      const leftStart = this.leftPath.getStartPoint();
+      const rightStart = this.rightPath.getStartPoint();
 
-      this.leftPath.lineTo(lx, leftEnd.y + 200);
-      this.rightPath.lineTo(rx, rightEnd.y + 200);
+
+      this.leftPath.curves.unshift(new Phaser.Curves.Line(new Phaser.Math.Vector2(lx, leftStart.y - 200), leftStart));
+      this.rightPath.curves.unshift(new Phaser.Curves.Line(new Phaser.Math.Vector2(rx, rightStart.y - 200), rightStart));
 
       this.offset = 0;
     }
