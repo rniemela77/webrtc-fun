@@ -14,6 +14,7 @@ class Racer extends Phaser.Scene {
     this.createObstacles();
     this.setupCamera();
     this.setupInput();
+    this.createLine();
   }
 
   update() {
@@ -21,6 +22,85 @@ class Racer extends Phaser.Scene {
     this.updateBackground();
     this.updateSpaceshipMovement();
     this.updateCamera();
+    this.updateLine();
+  }
+
+  createLine() {
+    this.graphics = this.add.graphics();
+
+    this.leftPath = new Phaser.Curves.Path(Phaser.Math.Between(200, 100), 0);
+    this.rightPath = new Phaser.Curves.Path(Phaser.Math.Between(400, 500), 0);
+
+    //  Create a random land which is 1000px high (600 for our screen size + 400 buffer)
+    let lx = Phaser.Math.Between(200, 100);
+    let rx = Phaser.Math.Between(400, 500);
+
+    for (let y = 200; y <= 1000; y += 200) {
+      this.leftPath.lineTo(lx, y);
+      this.rightPath.lineTo(rx, y);
+
+      lx = Phaser.Math.Between(200, 100);
+      rx = Phaser.Math.Between(400, 500);
+    }
+
+    this.offset = 0;
+  }
+
+  updateLine() {
+    this.offset += 1;
+
+
+    // Move the land downward by decreasing the y-coordinates
+    this.leftPath.curves.forEach(curve => {
+      curve.p0.y -= 1;
+      curve.p1.y -= 1;
+  });
+
+  this.rightPath.curves.forEach(curve => {
+      curve.p0.y -= 1;
+      curve.p1.y -= 1;
+  });
+
+    //  Every 200 pixels we'll generate a new chunk of land
+    if (this.offset >= 200) {
+      //  We need to generate a new section of the land as we've run out
+      let lx = Phaser.Math.Between(200, 100);
+      let rx = Phaser.Math.Between(400, 500);
+
+      const leftEnd = this.leftPath.getEndPoint();
+      const rightEnd = this.rightPath.getEndPoint();
+
+      this.leftPath.lineTo(lx, leftEnd.y + 200);
+      this.rightPath.lineTo(rx, rightEnd.y + 200);
+
+      this.offset = 0;
+    }
+
+    //  Draw it
+    this.graphics.clear();
+
+    //  And this will give a filled Graphics landscape:
+    this.drawLand(this.leftPath, 0);
+    this.drawLand(this.rightPath, 800);
+  }
+
+  drawLand(path, offsetX) {
+    const points = [{ x: offsetX, y: 0 }];
+
+    let lastY;
+
+    for (let i = 0; i < path.curves.length; i++) {
+      const curve = path.curves[i];
+
+      points.push(curve.p0, curve.p1);
+
+      lastY = curve.p1.y;
+    }
+
+    points.push({ x: offsetX, y: lastY });
+
+    this.graphics.fillStyle(0x7b3a05);
+    this.graphics.fillPoints(points, true, true);
   }
 
   loadImages() {
