@@ -66,6 +66,28 @@ class Racer extends Phaser.Scene {
     // draw the path
     this.graphics.lineStyle(3, 0xffffff, 1);
     this.path.draw(this.graphics);
+
+    // on update
+    this.time.addEvent({
+      delay: 1000,
+      callback: () => {
+        this.graphics.clear();
+        
+        // create a new path
+        this.path = new Phaser.Curves.Path(this.scale.width / 2, this.scale.height);
+
+        // random points along the way
+        for (let i = 0; i < 10; i++) {
+          this.path.lineTo(
+            Phaser.Math.Between(this.scale.width / 3, this.scale.width / 3 * 2),
+            this.scale.height - (i + 1) * (this.scale.height / 10)
+          );
+        }
+        
+        this.path.draw(this.graphics);
+      },
+      loop: true,
+    });
   }
 
   loadImages() {
