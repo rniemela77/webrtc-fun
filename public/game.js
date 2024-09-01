@@ -22,14 +22,12 @@ class Racer extends Phaser.Scene {
     this.updateBackground();
     this.updateSpaceshipMovement();
     this.updateCamera();
-    this.updateLine();
-    this.checkCollisions();
   }
 
-  checkCollisions() {    
+  checkCollisions() {
     // Calculate the t-value based on spaceship.y
     const t = this.spaceship.y / this.leftPath.getBounds().height;
-    
+
     // Clamp t to [0, 1] range
     const clampedT = Phaser.Math.Clamp(t, 0, 1);
 
@@ -43,89 +41,31 @@ class Racer extends Phaser.Scene {
 
     // Check if the spaceship is outside the bounds of the path
     if (this.spaceship.x < leftX || this.spaceship.x > rightX) {
-        this.spaceship.setTint(0xff0000);
+      this.spaceship.setTint(0xff0000);
     } else {
-        this.spaceship.clearTint();
+      this.spaceship.clearTint();
     }
-}
-
+  }
 
   createLine() {
     this.graphics = this.add.graphics();
 
-    this.leftPath = new Phaser.Curves.Path(Phaser.Math.Between(200, 100), 0);
-    this.rightPath = new Phaser.Curves.Path(Phaser.Math.Between(400, 500), 0);
+    // create a path going from the bottom of the screen to the top
+    this.path = new Phaser.Curves.Path(this.scale.width / 2, this.scale.height);
 
-    //  Create a random land which is 1000px high (600 for our screen size + 400 buffer)
-    let lx = Phaser.Math.Between(200, 100);
-    let rx = Phaser.Math.Between(400, 500);
-
-    for (let y = 200; y <= 1000; y += 200) {
-      this.leftPath.lineTo(lx, y);
-      this.rightPath.lineTo(rx, y);
-
-      lx = Phaser.Math.Between(200, 100);
-      rx = Phaser.Math.Between(400, 500);
+    // random points along the way
+    for (let i = 0; i < 10; i++) {
+      this.path.lineTo(
+        Phaser.Math.Between(this.scale.width / 3, this.scale.width / 3 * 2),
+        this.scale.height - (i + 1) * (this.scale.height / 10)
+      );
     }
 
-    this.offset = 0;
-  }
+    this.path.lineTo(this.scale.width / 2, 0);
 
-  updateLine() {
-    const speed = 2;
-    this.offset += speed;
-
-    // Move the land downward by decreasing the y-coordinates
-    this.leftPath.curves.forEach((curve) => {
-      curve.p0.y += speed;
-      curve.p1.y += speed;
-    });
-
-    this.rightPath.curves.forEach((curve) => {
-      curve.p0.y += speed;
-      curve.p1.y += speed;
-    });
-
-    if (this.leftPath.curves[0].p0.y > speed * 200) {
-      //  We need to generate a new section of the land as we've run out
-      let lx = Phaser.Math.Between(100, 200);
-      let rx = Phaser.Math.Between(400, 500);
-
-      const leftStart = this.leftPath.getStartPoint();
-      const rightStart = this.rightPath.getStartPoint();
-
-
-      this.leftPath.curves.unshift(new Phaser.Curves.Line(new Phaser.Math.Vector2(lx, leftStart.y - 200), leftStart));
-      this.rightPath.curves.unshift(new Phaser.Curves.Line(new Phaser.Math.Vector2(rx, rightStart.y - 200), rightStart));
-
-      this.offset = 0;
-    }
-
-    //  Draw it
-    this.graphics.clear();
-
-    //  And this will give a filled Graphics landscape:
-    this.drawLand(this.leftPath, 0);
-    this.drawLand(this.rightPath, 800);
-  }
-
-  drawLand(path, offsetX) {
-    const points = [{ x: offsetX, y: 0 }];
-
-    let lastY;
-
-    for (let i = 0; i < path.curves.length; i++) {
-      const curve = path.curves[i];
-
-      points.push(curve.p0, curve.p1);
-
-      lastY = curve.p1.y;
-    }
-
-    points.push({ x: offsetX, y: lastY });
-
-    this.graphics.fillStyle(0x7b3a05);
-    this.graphics.fillPoints(points, true, true);
+    // draw the path
+    this.graphics.lineStyle(3, 0xffffff, 1);
+    this.path.draw(this.graphics);
   }
 
   loadImages() {
