@@ -97,38 +97,37 @@ class Racer extends Phaser.Scene {
       let accumulatedLength = 0;
       let currentX = this.scale.width / 2;
       let currentY = this.scale.height;
-      const segmentLength = 50; // Example segment length
+      const segmentLength = 500; // Example segment length
   
       this.path.moveTo(currentX, currentY);
       this.linePoints.push({ x: currentX, y: currentY }); // Store initial point
   
-      while (accumulatedLength < totalLength) {
+      while (accumulatedLength + segmentLength < totalLength) {
           const nextX = Phaser.Math.Between(this.scale.width / 3, (this.scale.width / 3) * 2);
           const nextY = currentY - segmentLength;
   
-          this.path.lineTo(nextX, nextY);
-          this.linePoints.push({ x: nextX, y: nextY }); // Store coordinates
+          // Ensure the next point is further down
+          if (nextY < currentY) {
+              this.path.lineTo(nextX, nextY);
+              this.linePoints.push({ x: nextX, y: nextY }); // Store coordinates
   
-          accumulatedLength += segmentLength;
-          currentX = nextX;
-          currentY = nextY;
+              accumulatedLength += segmentLength;
+              currentX = nextX;
+              currentY = nextY;
+          }
       }
   
       // Make sure the path ends exactly at 1000px height
-      if (accumulatedLength > totalLength) {
-          const excess = accumulatedLength - totalLength;
-          currentY += excess;
-      }
-  
-      this.path.lineTo(this.scale.width / 2, 0);
-      this.linePoints.push({ x: this.scale.width / 2, y: 0 }); // Store final point
+      const finalY = this.scale.height - totalLength;
+      this.path.lineTo(this.scale.width / 2, finalY);
+      this.linePoints.push({ x: this.scale.width / 2, y: finalY }); // Store final point
   
       this.drawPath();
   }
   
   drawPath() {
       this.graphics.clear();
-      this.graphics.lineStyle(3, 0xffffff, 1);
+      this.graphics.lineStyle(35, 0xffffff, 1);
       this.path.draw(this.graphics);
   }
   
@@ -145,6 +144,7 @@ class Racer extends Phaser.Scene {
           point.y += 1; // Move path points downward
       });
   
+      // Redraw the path after moving it
       this.drawPath();
   }
 
