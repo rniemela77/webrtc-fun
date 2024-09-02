@@ -14,7 +14,7 @@ class Racer extends Phaser.Scene {
     this.createObstacles();
     this.setupCamera();
     this.setupInput();
-    this.createLine();
+    this.createLongLine();
   }
 
   update() {
@@ -87,53 +87,65 @@ class Racer extends Phaser.Scene {
     this.cursors = this.input.keyboard.createCursorKeys();
   }
 
-  createLine() {
-    this.graphics = this.add.graphics();
-    this.path = new Phaser.Curves.Path(this.scale.width / 2, this.scale.height);
-
-    for (let i = 0; i < 10; i++) {
-      this.path.lineTo(
-        Phaser.Math.Between(this.scale.width / 3, (this.scale.width / 3) * 2),
-        this.scale.height - (i + 1) * (this.scale.height / 10)
-      );
-    }
-
-    this.path.lineTo(this.scale.width / 2, 0);
-    this.drawPath();
+  createLongLine() {
+      this.graphics = this.add.graphics();
+      this.path = new Phaser.Curves.Path(this.scale.width / 2, this.scale.height);
+      this.linePoints = []; // Reset points array
+  
+      // Ensure the path length is exactly 1000px
+      const totalLength = 1000;
+      let accumulatedLength = 0;
+      let currentX = this.scale.width / 2;
+      let currentY = this.scale.height;
+      const segmentLength = 50; // Example segment length
+  
+      this.path.moveTo(currentX, currentY);
+      this.linePoints.push({ x: currentX, y: currentY }); // Store initial point
+  
+      while (accumulatedLength < totalLength) {
+          const nextX = Phaser.Math.Between(this.scale.width / 3, (this.scale.width / 3) * 2);
+          const nextY = currentY - segmentLength;
+  
+          this.path.lineTo(nextX, nextY);
+          this.linePoints.push({ x: nextX, y: nextY }); // Store coordinates
+  
+          accumulatedLength += segmentLength;
+          currentX = nextX;
+          currentY = nextY;
+      }
+  
+      // Make sure the path ends exactly at 1000px height
+      if (accumulatedLength > totalLength) {
+          const excess = accumulatedLength - totalLength;
+          currentY += excess;
+      }
+  
+      this.path.lineTo(this.scale.width / 2, 0);
+      this.linePoints.push({ x: this.scale.width / 2, y: 0 }); // Store final point
+  
+      this.drawPath();
   }
-
+  
   drawPath() {
-    this.graphics.clear();
-    this.graphics.lineStyle(3, 0xffffff, 1);
-    this.path.draw(this.graphics);
+      this.graphics.clear();
+      this.graphics.lineStyle(3, 0xffffff, 1);
+      this.path.draw(this.graphics);
   }
-
+  
   updateLine() {
-    this.path.curves.forEach(curve => {
-      ['p0', 'p1', 'p2', 'p3'].forEach(point => {
-        if (curve[point]?.y !== undefined) {
-          curve[point].y += 1;
-        }
+      this.path.curves.forEach(curve => {
+          ['p0', 'p1', 'p2', 'p3'].forEach(point => {
+              if (curve[point]?.y !== undefined) {
+                  curve[point].y += 1; // Move path downward
+              }
+          });
       });
-    });
-
-    this.drawPath();
-
-    // Reset path when it goes off screen
-    if (this.path.curves[0].p1.y > this.scale.height) {
-      this.resetPath();
-    }
-  }
-
-  resetPath() {
-    this.path = new Phaser.Curves.Path(this.scale.width / 2, this.scale.height);
-    for (let i = 0; i < 10; i++) {
-      this.path.lineTo(
-        Phaser.Math.Between(this.scale.width / 3, (this.scale.width / 3) * 2),
-        this.scale.height - (i + 1) * (this.scale.height / 10)
-      );
-    }
-    this.path.lineTo(this.scale.width / 2, 0);
+  
+      this.linePoints.forEach(point => {
+          point.y += 1; // Move path points downward
+      });
+  
+      this.drawPath();
   }
 
   updateObstacles() {
