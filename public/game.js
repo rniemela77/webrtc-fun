@@ -127,7 +127,7 @@ class Racer extends Phaser.Scene {
   
   drawPath() {
       this.graphics.clear();
-      this.graphics.lineStyle(35, 0xffffff, 1);
+      this.graphics.lineStyle(90, 0xffffff, 1);
       this.path.draw(this.graphics);
   }
   
@@ -226,7 +226,7 @@ class Racer extends Phaser.Scene {
   }
 
   checkSpaceshipOnLine() {
-    const tolerance = 20; // Increased tolerance value
+    const tolerance = 50;
     const points = this.path.getPoints(50);
 
     const isOnLine = points.some(point =>
