@@ -207,19 +207,28 @@ class Racer extends Phaser.Scene {
     const cursors = this.cursors;
 
     if (cursors.left.isDown) {
-      this.spaceshipSpeed = Math.max(this.spaceshipSpeed - this.acceleration, -this.maxSpeed);
+        this.spaceshipSpeed = Math.max(this.spaceshipSpeed - this.acceleration, -this.maxSpeed);
+        this.spaceship.angle -= 3; // Rotate left
     } else if (cursors.right.isDown) {
-      this.spaceshipSpeed = Math.min(this.spaceshipSpeed + this.acceleration, this.maxSpeed);
+        this.spaceshipSpeed = Math.min(this.spaceshipSpeed + this.acceleration, this.maxSpeed);
+        this.spaceship.angle += 3; // Rotate right
     } else {
-      this.spaceshipSpeed *= 1 - this.deceleration;
+        this.spaceshipSpeed *= 1 - this.deceleration;
     }
 
-    this.spaceship.x = Phaser.Math.Clamp(
-      this.spaceship.x + this.spaceshipSpeed,
-      this.spaceshipBoundsPadding,
-      this.scale.width - this.spaceshipBoundsPadding
-    );
-  }
+    // Apply smooth movement
+    this.spaceship.x += this.spaceshipSpeed;
+    this.spaceship.x = Phaser.Math.Clamp(this.spaceship.x, this.spaceshipBoundsPadding, this.scale.width - this.spaceshipBoundsPadding);
+
+    // Smooth rotation
+    this.spaceship.angle = Phaser.Math.Angle.Wrap(this.spaceship.angle);
+}
+
+updateCamera() {
+    // Adjust camera rotation to follow the spaceship’s rotation
+    this.cameras.main.rotation = Phaser.Math.Angle.Wrap(this.spaceship.angle * this.cameraRotationFactor);
+}
+
 
   updateCamera() {
     this.cameras.main.setRotation(this.spaceshipSpeed * this.cameraRotationFactor);
