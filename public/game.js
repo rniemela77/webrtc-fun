@@ -131,6 +131,18 @@ class Racer extends Phaser.Scene {
       this.path.draw(this.graphics);
   }
   
+  // Add this method to check the distance between the spaceship and the path points
+  isNearPath(spaceship, pathPoints, threshold) {
+      for (let point of pathPoints) {
+          const distance = Phaser.Math.Distance.Between(spaceship.x, spaceship.y, point.x, point.y);
+          if (distance < threshold) {
+              return true;
+          }
+      }
+      return false;
+  }
+  
+  // Update the updateLine method to include collision detection
   updateLine() {
       this.path.curves.forEach(curve => {
           ['p0', 'p1', 'p2', 'p3'].forEach(point => {
@@ -143,6 +155,14 @@ class Racer extends Phaser.Scene {
       this.linePoints.forEach(point => {
           point.y += 1; // Move path points downward
       });
+  
+      // Check if the spaceship is near the path
+      const threshold = 50; // Adjust this value as needed
+      if (this.isNearPath(this.spaceship, this.linePoints, threshold)) {
+          this.spaceship.setTint(0xff0000); // Change tint to red
+      } else {
+          this.spaceship.clearTint(); // Clear tint
+      }
   
       // Redraw the path after moving it
       this.drawPath();
@@ -206,7 +226,7 @@ class Racer extends Phaser.Scene {
   }
 
   checkSpaceshipOnLine() {
-    const tolerance = 5;
+    const tolerance = 20; // Increased tolerance value
     const points = this.path.getPoints(50);
 
     const isOnLine = points.some(point =>
