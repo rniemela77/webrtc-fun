@@ -63,9 +63,13 @@ class Racer extends Phaser.Scene {
   }
 
   createObstacles() {
-    this.obstacles = this.add.group({ key: "obstacle", repeat: 10, setXY: { x: 0, y: 0, stepX: 100 } });
-    
-    this.obstacles.children.iterate(obstacle => {
+    this.obstacles = this.add.group({
+      key: "obstacle",
+      repeat: 10,
+      setXY: { x: 0, y: 0, stepX: 100 },
+    });
+
+    this.obstacles.children.iterate((obstacle) => {
       const type = Phaser.Math.RND.pick(this.obstacleTypes);
       Object.assign(obstacle, { speed: type.speed, type: type.type });
       obstacle
@@ -88,88 +92,105 @@ class Racer extends Phaser.Scene {
   }
 
   createLongLine() {
-      this.graphics = this.add.graphics();
-      this.path = new Phaser.Curves.Path(this.scale.width / 2, this.scale.height);
-      this.linePoints = []; // Reset points array
-  
-      // Ensure the path length is exactly 1000px
-      const totalLength = 1000;
-      let accumulatedLength = 0;
-      let currentX = this.scale.width / 2;
-      let currentY = this.scale.height;
-      const segmentLength = 500; // Example segment length
-  
-      this.path.moveTo(currentX, currentY);
-      this.linePoints.push({ x: currentX, y: currentY }); // Store initial point
-  
-      while (accumulatedLength + segmentLength < totalLength) {
-          const nextX = Phaser.Math.Between(this.scale.width / 3, (this.scale.width / 3) * 2);
-          const nextY = currentY - segmentLength;
-  
-          // Ensure the next point is further down
-          if (nextY < currentY) {
-              this.path.lineTo(nextX, nextY);
-              this.linePoints.push({ x: nextX, y: nextY }); // Store coordinates
-  
-              accumulatedLength += segmentLength;
-              currentX = nextX;
-              currentY = nextY;
-          }
+    this.graphics = this.add.graphics();
+    this.path = new Phaser.Curves.Path(this.scale.width / 2, this.scale.height);
+    this.linePoints = []; // Reset points array
+
+    // Ensure the path length is exactly 1000px
+    const totalLength = 10000;
+    let accumulatedLength = 0;
+    let currentX = this.scale.width / 2;
+    let currentY = this.scale.height;
+    const segmentLength = 500; // Example segment length
+
+    this.path.moveTo(currentX, currentY);
+    this.linePoints.push({ x: currentX, y: currentY }); // Store initial point
+
+    while (accumulatedLength + segmentLength < totalLength) {
+      const nextX = Phaser.Math.Between(
+        this.scale.width / 3,
+        (this.scale.width / 3) * 2
+      );
+      const nextY = currentY - segmentLength;
+
+      // Ensure the next point is further down
+      if (nextY < currentY) {
+        this.path.lineTo(nextX, nextY);
+        this.linePoints.push({ x: nextX, y: nextY }); // Store coordinates
+
+        accumulatedLength += segmentLength;
+        currentX = nextX;
+        currentY = nextY;
       }
-  
-      // Make sure the path ends exactly at 1000px height
-      const finalY = this.scale.height - totalLength;
-      this.path.lineTo(this.scale.width / 2, finalY);
-      this.linePoints.push({ x: this.scale.width / 2, y: finalY }); // Store final point
-  
-      this.drawPath();
+    }
+
+    // Make sure the path ends exactly at 1000px height
+    const finalY = this.scale.height - totalLength;
+    this.path.lineTo(this.scale.width / 2, finalY);
+    this.linePoints.push({ x: this.scale.width / 2, y: finalY }); // Store final point
+
+    this.drawPath();
+
+    // Assuming this is part of your path creation code
+    const startX = this.scale.width / 2;
+    const startY = this.scale.height;
+    const endX = this.scale.width / 2;
+    const endY = finalY; // Adjust endY to make the path taller
+
+    // Adjust the speed of the path
+    this.pathSpeed = 2; // Increase this value to make the path move faster
   }
-  
+
   drawPath() {
-      this.graphics.clear();
-      this.graphics.lineStyle(90, 0xffffff, 1);
-      this.path.draw(this.graphics);
+    this.graphics.clear();
+    this.graphics.lineStyle(90, 0xffffff, 1);
+    this.path.draw(this.graphics);
   }
-  
+
   // Add this method to check the distance between the spaceship and the path points
   isNearPath(spaceship, pathPoints, threshold) {
-      for (let point of pathPoints) {
-          const distance = Phaser.Math.Distance.Between(spaceship.x, spaceship.y, point.x, point.y);
-          if (distance < threshold) {
-              return true;
-          }
+    for (let point of pathPoints) {
+      const distance = Phaser.Math.Distance.Between(
+        spaceship.x,
+        spaceship.y,
+        point.x,
+        point.y
+      );
+      if (distance < threshold) {
+        return true;
       }
-      return false;
+    }
+    return false;
   }
-  
+
   // Update the updateLine method to include collision detection
   updateLine() {
-      this.path.curves.forEach(curve => {
-          ['p0', 'p1', 'p2', 'p3'].forEach(point => {
-              if (curve[point]?.y !== undefined) {
-                  curve[point].y += 1; // Move path downward
-              }
-          });
+    this.path.curves.forEach((curve) => {
+      ["p0", "p1", "p2", "p3"].forEach((point) => {
+        if (curve[point]?.y !== undefined) {
+          curve[point].y += 1; // Move path downward
+        }
       });
-  
-      this.linePoints.forEach(point => {
-          point.y += 1; // Move path points downward
-      });
-  
-      // Check if the spaceship is near the path
-      const threshold = 50; // Adjust this value as needed
-      if (this.isNearPath(this.spaceship, this.linePoints, threshold)) {
-          this.spaceship.setTint(0xff0000); // Change tint to red
-      } else {
-          this.spaceship.clearTint(); // Clear tint
-      }
-  
-      // Redraw the path after moving it
-      this.drawPath();
+    });
+
+    this.linePoints.forEach((point) => {
+      point.y += 1; // Move path points downward
+    });
+
+    // Check if the spaceship is near the path
+    const threshold = 50; // Adjust this value as needed
+    if (this.isNearPath(this.spaceship, this.linePoints, threshold)) {
+      this.spaceship.setTint(0xff0000); // Change tint to red
+    } else {
+      this.spaceship.clearTint(); // Clear tint
+    }
+
+    // Redraw the path after moving it
+    this.drawPath();
   }
 
   updateObstacles() {
-    this.obstacles.children.iterate(obstacle => {
+    this.obstacles.children.iterate((obstacle) => {
       obstacle.y += obstacle.speed;
 
       if (obstacle.y > this.scale.height + obstacle.displayHeight) {
@@ -177,7 +198,12 @@ class Racer extends Phaser.Scene {
         obstacle.x = Phaser.Math.Between(0, this.scale.width);
       }
 
-      if (Phaser.Geom.Intersects.RectangleToRectangle(this.spaceship.getBounds(), obstacle.getBounds())) {
+      if (
+        Phaser.Geom.Intersects.RectangleToRectangle(
+          this.spaceship.getBounds(),
+          obstacle.getBounds()
+        )
+      ) {
         this.handleCollision(obstacle);
         obstacle.y = -obstacle.displayHeight;
         obstacle.x = Phaser.Math.Between(0, this.scale.width);
@@ -191,7 +217,8 @@ class Racer extends Phaser.Scene {
         this.spaceship.health -= obstacle.damage || 10; // Default damage
         break;
       case "power-up":
-        this.spaceship.power = (this.spaceship.power || 0) + (obstacle.powerValue || 1);
+        this.spaceship.power =
+          (this.spaceship.power || 0) + (obstacle.powerValue || 1);
         break;
       case "hazard":
         this.applyHazardEffect(obstacle.effect);
@@ -207,39 +234,58 @@ class Racer extends Phaser.Scene {
     const cursors = this.cursors;
 
     if (cursors.left.isDown) {
-        this.spaceshipSpeed = Math.max(this.spaceshipSpeed - this.acceleration, -this.maxSpeed);
-        this.spaceship.angle -= 3; // Rotate left
+      this.spaceshipSpeed = Math.max(
+        this.spaceshipSpeed - this.acceleration,
+        -this.maxSpeed
+      );
+      this.spaceship.angle -= 3; // Rotate left
     } else if (cursors.right.isDown) {
-        this.spaceshipSpeed = Math.min(this.spaceshipSpeed + this.acceleration, this.maxSpeed);
-        this.spaceship.angle += 3; // Rotate right
+      this.spaceshipSpeed = Math.min(
+        this.spaceshipSpeed + this.acceleration,
+        this.maxSpeed
+      );
+      this.spaceship.angle += 3; // Rotate right
     } else {
-        this.spaceshipSpeed *= 1 - this.deceleration;
+      this.spaceshipSpeed *= 1 - this.deceleration;
     }
 
     // Apply smooth movement
     this.spaceship.x += this.spaceshipSpeed;
-    this.spaceship.x = Phaser.Math.Clamp(this.spaceship.x, this.spaceshipBoundsPadding, this.scale.width - this.spaceshipBoundsPadding);
+    this.spaceship.x = Phaser.Math.Clamp(
+      this.spaceship.x,
+      this.spaceshipBoundsPadding,
+      this.scale.width - this.spaceshipBoundsPadding
+    );
 
     // Smooth rotation
     this.spaceship.angle = Phaser.Math.Angle.Wrap(this.spaceship.angle);
-}
-
-updateCamera() {
-    // Adjust camera rotation to follow the spaceship’s rotation
-    this.cameras.main.rotation = Phaser.Math.Angle.Wrap(this.spaceship.angle * this.cameraRotationFactor);
-}
-
+  }
 
   updateCamera() {
-    this.cameras.main.setRotation(this.spaceshipSpeed * this.cameraRotationFactor);
+    // Adjust camera rotation to follow the spaceship’s rotation
+    this.cameras.main.rotation = Phaser.Math.Angle.Wrap(
+      this.spaceship.angle * this.cameraRotationFactor
+    );
+  }
+
+  updateCamera() {
+    this.cameras.main.setRotation(
+      this.spaceshipSpeed * this.cameraRotationFactor
+    );
   }
 
   checkSpaceshipOnLine() {
     const tolerance = 50;
     const points = this.path.getPoints(50);
 
-    const isOnLine = points.some(point =>
-      Phaser.Math.Distance.Between(this.spaceship.x, this.spaceship.y, point.x, point.y) < tolerance
+    const isOnLine = points.some(
+      (point) =>
+        Phaser.Math.Distance.Between(
+          this.spaceship.x,
+          this.spaceship.y,
+          point.x,
+          point.y
+        ) < tolerance
     );
 
     this.spaceship.setTint(isOnLine ? 0xff0000 : 0xffffff);
