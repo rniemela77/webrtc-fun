@@ -11,14 +11,14 @@ class Racer extends Phaser.Scene {
     this.createBackground();
     this.createSpaceship();
     this.initializeVariables();
-    this.createObstacles();
+    // this.createObstacles();
     this.setupCamera();
     this.setupInput();
     this.createLongLine();
   }
 
   update() {
-    this.updateObstacles();
+    // this.updateObstacles();
     this.updateBackground();
     this.updateSpaceshipMovement();
     this.updateCamera();
@@ -60,6 +60,11 @@ class Racer extends Phaser.Scene {
       { type: "asteroid", speed: 4, color: 0x6666c6, scale: 0.8 },
       { type: "satellite", speed: 6, color: 0x66c666, scale: 0.3 },
     ];
+
+    this.lineSpeed = 5  ;
+    this.lineThickness = 90;
+    this.lineTotalLength = 10000;
+    this.lineSegmentLength = 300;
   }
 
   createObstacles() {
@@ -97,11 +102,11 @@ class Racer extends Phaser.Scene {
     this.linePoints = []; // Reset points array
 
     // Ensure the path length is exactly 1000px
-    const totalLength = 10000;
+    const totalLength = this.lineTotalLength;
     let accumulatedLength = 0;
     let currentX = this.scale.width / 2;
     let currentY = this.scale.height;
-    const segmentLength = 500; // Example segment length
+    const segmentLength = this.lineSegmentLength; // Example segment length
 
     this.path.moveTo(currentX, currentY);
     this.linePoints.push({ x: currentX, y: currentY }); // Store initial point
@@ -130,20 +135,12 @@ class Racer extends Phaser.Scene {
     this.linePoints.push({ x: this.scale.width / 2, y: finalY }); // Store final point
 
     this.drawPath();
-
-    // Assuming this is part of your path creation code
-    const startX = this.scale.width / 2;
-    const startY = this.scale.height;
-    const endX = this.scale.width / 2;
-    const endY = finalY; // Adjust endY to make the path taller
-
-    // Adjust the speed of the path
-    this.pathSpeed = 2; // Increase this value to make the path move faster
   }
 
   drawPath() {
+    
     this.graphics.clear();
-    this.graphics.lineStyle(90, 0xffffff, 1);
+    this.graphics.lineStyle(this.lineThickness, 0xffffff, 1);
     this.path.draw(this.graphics);
   }
 
@@ -168,13 +165,9 @@ class Racer extends Phaser.Scene {
     this.path.curves.forEach((curve) => {
       ["p0", "p1", "p2", "p3"].forEach((point) => {
         if (curve[point]?.y !== undefined) {
-          curve[point].y += 1; // Move path downward
+          curve[point].y += this.lineSpeed; // Move path downward
         }
       });
-    });
-
-    this.linePoints.forEach((point) => {
-      point.y += 1; // Move path points downward
     });
 
     // Check if the spaceship is near the path
