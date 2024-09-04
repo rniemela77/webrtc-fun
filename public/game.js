@@ -101,48 +101,48 @@ class Racer extends Phaser.Scene {
     this.path = new Phaser.Curves.Path(this.scale.width / 2, this.scale.height);
     this.linePoints = []; // Reset points array
 
-    // Ensure the path length is exactly 1000px
     const totalLength = this.lineTotalLength;
     let accumulatedLength = 0;
     let currentX = this.scale.width / 2;
     let currentY = this.scale.height;
-    const segmentLength = this.lineSegmentLength; // Example segment length
 
-    this.path.moveTo(currentX, currentY);
     this.linePoints.push({ x: currentX, y: currentY }); // Store initial point
 
-    while (accumulatedLength + segmentLength < totalLength) {
-      const nextX = Phaser.Math.Between(
-        this.scale.width / 3,
-        (this.scale.width / 3) * 2
-      );
-      const nextY = currentY - segmentLength;
+    // Generate points for the spline
+    while (accumulatedLength + this.lineSegmentLength < totalLength) {
+        const nextX = Phaser.Math.Between(
+            this.scale.width / 3,
+            (this.scale.width / 3) * 2
+        );
+        const nextY = currentY - this.lineSegmentLength;
 
-      // Ensure the next point is further down
-      if (nextY < currentY) {
-        this.path.lineTo(nextX, nextY);
-        this.linePoints.push({ x: nextX, y: nextY }); // Store coordinates
-
-        accumulatedLength += segmentLength;
-        currentX = nextX;
-        currentY = nextY;
-      }
+        if (nextY < currentY) {
+            this.linePoints.push({ x: nextX, y: nextY });
+            accumulatedLength += this.lineSegmentLength;
+            currentX = nextX;
+            currentY = nextY;
+        }
     }
 
-    // Make sure the path ends exactly at 1000px height
-    const finalY = this.scale.height - totalLength;
-    this.path.lineTo(this.scale.width / 2, finalY);
-    this.linePoints.push({ x: this.scale.width / 2, y: finalY }); // Store final point
+    // Ensure the path ends exactly at the desired height
+    this.linePoints.push({ x: this.scale.width / 2, y: currentY - (totalLength - accumulatedLength) });
+
+    // Create Spline
+    const spline = new Phaser.Curves.Spline(this.linePoints);
+    this.path.add(spline);
 
     this.drawPath();
-  }
+}
 
-  drawPath() {
-    
-    this.graphics.clear();
-    this.graphics.lineStyle(this.lineThickness, 0xffffff, 1);
-    this.path.draw(this.graphics);
-  }
+
+drawPath() {
+  this.graphics.clear();
+  this.graphics.lineStyle(this.lineThickness, 0xffffff, 1);
+
+  // Draw the smooth path
+  this.path.draw(this.graphics);
+}
+
 
   // Add this method to check the distance between the spaceship and the path points
   isNearPath(spaceship, pathPoints, threshold) {
@@ -162,25 +162,29 @@ class Racer extends Phaser.Scene {
 
   // Update the updateLine method to include collision detection
   updateLine() {
-    this.path.curves.forEach((curve) => {
-      ["p0", "p1", "p2", "p3"].forEach((point) => {
-        if (curve[point]?.y !== undefined) {
-          curve[point].y += this.lineSpeed; // Move path downward
-        }
-      });
+    // Move each point of the spline downward
+    this.linePoints.forEach(point => {
+        point.y += this.lineSpeed; // Move path downward
     });
+
+    // Recreate the spline with the updated points
+    this.path = new Phaser.Curves.Path(this.scale.width / 2, this.scale.height);
+    const spline = new Phaser.Curves.Spline(this.linePoints);
+    this.path.add(spline);
 
     // Check if the spaceship is near the path
     const threshold = 50; // Adjust this value as needed
     if (this.isNearPath(this.spaceship, this.linePoints, threshold)) {
-      this.spaceship.setTint(0xff0000); // Change tint to red
+        this.spaceship.setTint(0xff0000); // Change tint to red
     } else {
-      this.spaceship.clearTint(); // Clear tint
+        this.spaceship.clearTint(); // Clear tint
     }
 
-    // Redraw the path after moving it
+    // Redraw the path after updating it
     this.drawPath();
-  }
+}
+
+
 
   updateObstacles() {
     this.obstacles.children.iterate((obstacle) => {
