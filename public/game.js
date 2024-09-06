@@ -3,54 +3,51 @@ const config = {
   width: window.innerWidth,
   height: window.innerHeight,
   physics: {
-      default: 'arcade',
-      arcade: {
-          gravity: { y: 0 },
-          debug: false
-      }
+    default: "arcade",
+    arcade: {
+      gravity: { y: 0 },
+      debug: false,
+    },
   },
   scene: {
-      preload: preload,
-      create: create,
-      update: update
-  }
+    preload: preload,
+    create: create,
+    update: update,
+  },
 };
 
 const game = new Phaser.Game(config);
 let player;
-let moveLeft = false;
-let moveRight = false;
 
 function preload() {
-  this.load.image('player', 'circle.png'); // Load your player ship image
+  this.load.image("player", "circle.png"); // Load your player ship image
 }
 
 function create() {
   // Create the player ship
-  player = this.physics.add.sprite(400, 500, 'player');
+  player = this.physics.add.sprite(400, 500, "player");
   player.setCollideWorldBounds(true); // Prevent ship from going off-screen
 
-  // Input events for touch
-  this.input.on('pointerdown', function (pointer) {
-      if (pointer.x < game.config.width / 2) {
-          moveLeft = true;
-      } else {
-          moveRight = true;
-      }
-  }, this);
+  // if pointer is down
+  this.input.on("pointerdown", (pointer) => {
+    this.pointerDown = true;
+  });
 
-  this.input.on('pointerup', function (pointer) {
-      moveLeft = false;
-      moveRight = false;
-  }, this);
+  // if pointer is up
+  this.input.on("pointerup", (pointer) => {
+    this.pointerDown = false;
+  });
 }
 
 function update() {
-  if (moveLeft) {
-      player.setVelocityX(-200); // Move left
-  } else if (moveRight) {
-      player.setVelocityX(200); // Move right
+  // if pointer is down and player is left or right
+  if (this.pointerDown && player) {
+    if (this.input.activePointer.x < player.x) {
+      player.setVelocityX(-160);
+    } else if (this.input.activePointer.x > player.x) {
+      player.setVelocityX(160);
+    }
   } else {
-      player.setVelocityX(0); // Stop moving when no input
+    player.setVelocityX(0);
   }
 }
