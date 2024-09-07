@@ -20,11 +20,11 @@ class Racer extends Phaser.Scene {
     this.updateBackground();
     this.updateSpaceshipMovement();
     this.updateWaves();
-    this.checkSpaceshipWaveInteraction(); // Check interaction
+    this.checkSpaceshipWaveInteraction(); // Check interaction and apply repelling force
   }
 
   createWave() {
-    // create a wave (a line) that moves from the bottom to the top of the screen
+    // Create a wave (a line) that moves from the bottom to the top of the screen
     this.wave = this.add.graphics();
     this.wave.lineStyle(2, 0xffffff, 1);
     this.wave.beginPath();
@@ -41,7 +41,7 @@ class Racer extends Phaser.Scene {
   }
 
   updateWaves() {
-    // move the wave down 2px
+    // Move the wave down 2px
     this.wave.y += 2;
 
     // Update wave positions
@@ -78,6 +78,7 @@ class Racer extends Phaser.Scene {
     this.cameraRotationFactor = 0.012;
     this.spaceshipBoundsPadding = 50;
     this.waveDetectionRadius = 50; // Radius to detect wave interaction
+    this.repellingForce = 2; // Force to repel the spaceship
   }
 
   setupCamera() {
@@ -143,28 +144,44 @@ class Racer extends Phaser.Scene {
     const waveEndY = this.waveEndY;
 
     // Calculate distance to the closest point on the wave
-    const waveDistance = this.calculateDistanceToLine(
+    const { closestPoint, distance } = this.calculateClosestPointOnLine(
       waveStartX, waveStartY, waveEndX, waveEndY,
       spaceshipX, spaceshipY
     );
 
     // Check if the distance is within the interaction radius
-    if (waveDistance < this.waveDetectionRadius) {
-      this.spaceship.setTint(0xff0000); // Turn red
+    if (distance < this.waveDetectionRadius) {
+      this.spaceship.setTint(0xcccccc); // Turn red
+
+      // Calculate direction vector from the spaceship to the closest point
+      const directionX = spaceshipX - closestPoint.x;
+      const directionY = spaceshipY - closestPoint.y;
+      const magnitude = Phaser.Math.Distance.Between(0, 0, directionX, directionY);
+      
+      // Normalize the direction vector
+      const normalizedX = directionX / magnitude;
+      const normalizedY = directionY / magnitude;
+
+      // Apply repelling force
+      this.spaceship.x += this.repellingForce * normalizedX;
+      // this.spaceship.y += this.repellingForce * normalizedY;
     } else {
       this.spaceship.clearTint(); // Reset color
     }
   }
 
-  calculateDistanceToLine(x1, y1, x2, y2, px, py) {
+  calculateClosestPointOnLine(x1, y1, x2, y2, px, py) {
     const lineLength = Phaser.Math.Distance.Between(x1, y1, x2, y2);
-    if (lineLength === 0) return Phaser.Math.Distance.Between(px, py, x1, y1);
+    if (lineLength === 0) return { closestPoint: { x: x1, y: y1 }, distance: Phaser.Math.Distance.Between(px, py, x1, y1) };
 
     const t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / (lineLength * lineLength);
     const closestX = x1 + t * (x2 - x1);
     const closestY = y1 + t * (y2 - y1);
 
-    return Phaser.Math.Distance.Between(px, py, closestX, closestY);
+    return {
+      closestPoint: { x: closestX, y: closestY },
+      distance: Phaser.Math.Distance.Between(px, py, closestX, closestY)
+    };
   }
 }
 
