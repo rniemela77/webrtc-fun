@@ -24,29 +24,29 @@ class Racer extends Phaser.Scene {
   }
 
   createWave() {
-    // Create a wave (a line) that moves from the bottom to the top of the screen
+    // Store the wave's start and end positions
+    this.waveStartX = this.scale.width * 2;
+    this.waveStartY = 0;
+    this.waveEndX = this.scale.width * 1.5;
+    this.waveEndY = this.scale.height;
+
+    // Create a wave (a line) that moves from the right to the left of the screen
     this.wave = this.add.graphics();
     this.wave.lineStyle(2, 0xffffff, 1);
     this.wave.beginPath();
-    this.wave.moveTo(0, this.scale.height);
-    this.wave.lineTo(this.scale.width, 0);
+    this.wave.moveTo(this.waveStartX, this.waveStartY);
+    this.wave.lineTo(this.waveEndX, this.waveEndY);
     this.wave.closePath();
     this.wave.strokePath();
-
-    // Store the wave's start and end positions
-    this.waveStartX = 0;
-    this.waveStartY = this.scale.height;
-    this.waveEndX = this.scale.width;
-    this.waveEndY = 0;
   }
 
   updateWaves() {
-    // Move the wave down 2px
-    this.wave.y += 2;
+    // Move the wave left 2px
+    this.wave.x -= 2;
 
     // Update wave positions
-    this.waveStartY += 2;
-    this.waveEndY += 2;
+    this.waveStartX -= 2;
+    this.waveEndX -= 2;
   }
 
   loadImages() {
