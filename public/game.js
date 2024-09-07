@@ -1,6 +1,9 @@
-class Racer extends Phaser.Scene {
+import Wave from './wave.js';
+
+class Waver extends Phaser.Scene {
   constructor() {
     super({ key: "Racer" });
+    this.waves = [];
   }
 
   preload() {
@@ -13,7 +16,13 @@ class Racer extends Phaser.Scene {
     this.initializeVariables();
     this.setupCamera();
     this.setupInput();
-    this.createWave();
+    // this.createWave();
+    this.time.addEvent({
+      delay: 3000, // 3 seconds
+      callback: this.generateWave,
+      callbackScope: this,
+      loop: true
+    });
   }
 
   update() {
@@ -23,47 +32,17 @@ class Racer extends Phaser.Scene {
     this.checkSpaceshipWaveInteraction(); // Check interaction and apply repelling force
   }
 
-  createWave() {
-
-    // Randomly determine the wave's start position
+  generateWave() {
     const startX = Phaser.Math.Between(0, this.scale.width);
     const endX = Phaser.Math.Between(0, this.scale.width);
-
-    // Store the wave's start and end positions
-    this.waveStartX = startX;
-    this.waveStartY = 0;
-    this.waveEndX = endX;
-    this.waveEndY = this.scale.height;
-
-    if (startX > endX) {
-      this.waveStartX += this.scale.width;
-      this.waveEndX += this.scale.width;
-    } else {
-      this.waveStartX -= this.scale.width;
-      this.waveEndX -= this.scale.width;
-    }
-
-    // Create a wave (a line) that moves from the start to the end position
-    this.wave = this.add.graphics();
-    this.wave.lineStyle(2, 0xffffff, 1);
-    this.wave.beginPath();
-    this.wave.moveTo(this.waveStartX, this.waveStartY);
-    this.wave.lineTo(this.waveEndX, this.waveEndY);
-    this.wave.closePath();
-    this.wave.strokePath();
+    const wave = new Wave(this, startX, endX);
+    this.waves.push(wave);
   }
 
   updateWaves() {
-    // Determine the direction to move the wave
-    const direction = this.waveStartX < this.waveEndX ? 1 : -1;
-
-    // Move the wave along the x axis
-    this.wave.x += 5 * direction;
-
-    // Update wave positions
-    this.waveStartX += 5 * direction;
-    this.waveEndX += 5 * direction;
+    this.waves.forEach(wave => wave.update());
   }
+
 
   loadImages() {
     this.load.image("background", "path/to/background.png");
@@ -211,7 +190,7 @@ const config = {
     default: "arcade",
     arcade: { debug: true },
   },
-  scene: Racer,
+  scene: Waver,
 };
 
 const game = new Phaser.Game(config);
