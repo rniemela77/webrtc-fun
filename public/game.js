@@ -24,13 +24,26 @@ class Racer extends Phaser.Scene {
   }
 
   createWave() {
+
+    // Randomly determine the wave's start position
+    const startX = Phaser.Math.Between(0, this.scale.width);
+    const endX = Phaser.Math.Between(0, this.scale.width);
+
     // Store the wave's start and end positions
-    this.waveStartX = this.scale.width * 2;
+    this.waveStartX = startX;
     this.waveStartY = 0;
-    this.waveEndX = this.scale.width * 1.5;
+    this.waveEndX = endX;
     this.waveEndY = this.scale.height;
 
-    // Create a wave (a line) that moves from the right to the left of the screen
+    if (startX > endX) {
+      this.waveStartX += this.scale.width;
+      this.waveEndX += this.scale.width;
+    } else {
+      this.waveStartX -= this.scale.width;
+      this.waveEndX -= this.scale.width;
+    }
+
+    // Create a wave (a line) that moves from the start to the end position
     this.wave = this.add.graphics();
     this.wave.lineStyle(2, 0xffffff, 1);
     this.wave.beginPath();
@@ -41,12 +54,15 @@ class Racer extends Phaser.Scene {
   }
 
   updateWaves() {
-    // Move the wave left 2px
-    this.wave.x -= 2;
+    // Determine the direction to move the wave
+    const direction = this.waveStartX < this.waveEndX ? 1 : -1;
+
+    // Move the wave along the x axis
+    this.wave.x += 5 * direction;
 
     // Update wave positions
-    this.waveStartX -= 2;
-    this.waveEndX -= 2;
+    this.waveStartX += 5 * direction;
+    this.waveEndX += 5 * direction;
   }
 
   loadImages() {
