@@ -13,12 +13,40 @@ class Racer extends Phaser.Scene {
     this.initializeVariables();
     this.setupCamera();
     this.setupInput();
+    this.createWave();
   }
 
   update() {
     this.updateBackground();
     this.updateSpaceshipMovement();
-    this.updateCamera();
+    this.updateWaves();
+    this.checkSpaceshipWaveInteraction(); // Check interaction
+  }
+
+  createWave() {
+    // create a wave (a line) that moves from the bottom to the top of the screen
+    this.wave = this.add.graphics();
+    this.wave.lineStyle(2, 0xffffff, 1);
+    this.wave.beginPath();
+    this.wave.moveTo(0, this.scale.height);
+    this.wave.lineTo(this.scale.width, 0);
+    this.wave.closePath();
+    this.wave.strokePath();
+
+    // Store the wave's start and end positions
+    this.waveStartX = 0;
+    this.waveStartY = this.scale.height;
+    this.waveEndX = this.scale.width;
+    this.waveEndY = 0;
+  }
+
+  updateWaves() {
+    // move the wave down 2px
+    this.wave.y += 2;
+
+    // Update wave positions
+    this.waveStartY += 2;
+    this.waveEndY += 2;
   }
 
   loadImages() {
@@ -49,6 +77,7 @@ class Racer extends Phaser.Scene {
     this.cameraZoom = 1.3;
     this.cameraRotationFactor = 0.012;
     this.spaceshipBoundsPadding = 50;
+    this.waveDetectionRadius = 50; // Radius to detect wave interaction
   }
 
   setupCamera() {
@@ -98,16 +127,44 @@ class Racer extends Phaser.Scene {
   }
 
   updateCamera() {
-    // Adjust camera rotation to follow the spaceship’s rotation
-    this.cameras.main.rotation = Phaser.Math.Angle.Wrap(
-      this.spaceship.angle * this.cameraRotationFactor
-    );
-  }
-
-  updateCamera() {
     this.cameras.main.setRotation(
       this.spaceshipSpeed * this.cameraRotationFactor
     );
+  }
+
+  checkSpaceshipWaveInteraction() {
+    const spaceshipX = this.spaceship.x;
+    const spaceshipY = this.spaceship.y;
+
+    // Wave's position and dimensions
+    const waveStartX = this.waveStartX;
+    const waveStartY = this.waveStartY;
+    const waveEndX = this.waveEndX;
+    const waveEndY = this.waveEndY;
+
+    // Calculate distance to the closest point on the wave
+    const waveDistance = this.calculateDistanceToLine(
+      waveStartX, waveStartY, waveEndX, waveEndY,
+      spaceshipX, spaceshipY
+    );
+
+    // Check if the distance is within the interaction radius
+    if (waveDistance < this.waveDetectionRadius) {
+      this.spaceship.setTint(0xff0000); // Turn red
+    } else {
+      this.spaceship.clearTint(); // Reset color
+    }
+  }
+
+  calculateDistanceToLine(x1, y1, x2, y2, px, py) {
+    const lineLength = Phaser.Math.Distance.Between(x1, y1, x2, y2);
+    if (lineLength === 0) return Phaser.Math.Distance.Between(px, py, x1, y1);
+
+    const t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / (lineLength * lineLength);
+    const closestX = x1 + t * (x2 - x1);
+    const closestY = y1 + t * (y2 - y1);
+
+    return Phaser.Math.Distance.Between(px, py, closestX, closestY);
   }
 }
 
