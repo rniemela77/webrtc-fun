@@ -11,24 +11,19 @@ class Racer extends Phaser.Scene {
     this.createBackground();
     this.createSpaceship();
     this.initializeVariables();
-    // this.createObstacles();
     this.setupCamera();
     this.setupInput();
-    this.createLongLine();
   }
 
   update() {
-    // this.updateObstacles();
     this.updateBackground();
     this.updateSpaceshipMovement();
     this.updateCamera();
-    this.updateLine();
   }
 
   loadImages() {
     this.load.image("background", "path/to/background.png");
     this.load.image("spaceship", "path/to/spaceship.png");
-    this.load.image("obstacle", "circle.png");
   }
 
   createBackground() {
@@ -54,34 +49,6 @@ class Racer extends Phaser.Scene {
     this.cameraZoom = 1.3;
     this.cameraRotationFactor = 0.012;
     this.spaceshipBoundsPadding = 50;
-    this.obstacleTypes = [
-      { type: "rock", speed: 2, color: 0xcc6666, scale: 1 },
-      { type: "asteroid", speed: 4, color: 0x6666c6, scale: 0.8 },
-      { type: "satellite", speed: 6, color: 0x66c666, scale: 0.3 },
-    ];
-
-    this.lineSpeed = 5;
-    this.lineThickness = 90;
-    this.lineTotalLength = 10000;
-    this.lineSegmentLength = 300;
-  }
-
-  createObstacles() {
-    this.obstacles = this.add.group({
-      key: "obstacle",
-      repeat: 10,
-      setXY: { x: 0, y: 0, stepX: 100 },
-    });
-
-    this.obstacles.children.iterate((obstacle) => {
-      const type = Phaser.Math.RND.pick(this.obstacleTypes);
-      Object.assign(obstacle, { speed: type.speed, type: type.type });
-      obstacle
-        .setTint(type.color)
-        .setScale(type.scale)
-        .setOrigin(0.5, 0)
-        .setY(Phaser.Math.Between(0, this.scale.height));
-    });
   }
 
   setupCamera() {
@@ -93,111 +60,6 @@ class Racer extends Phaser.Scene {
 
   setupInput() {
     this.cursors = this.input.keyboard.createCursorKeys();
-  }
-
-  createLongLine() {
-    this.graphics = this.add.graphics();
-    this.path = new Phaser.Curves.Path(this.scale.width / 2, this.scale.height);
-    this.linePoints = []; // Reset points array
-
-    const totalLength = this.lineTotalLength;
-    let accumulatedLength = 0;
-    let currentX = this.scale.width / 2;
-    let currentY = this.scale.height;
-
-    this.linePoints.push({ x: currentX, y: currentY }); // Store initial point
-
-    // Generate points for the spline
-    while (accumulatedLength + this.lineSegmentLength < totalLength) {
-      const nextX = Phaser.Math.Between(
-        this.scale.width / 3,
-        (this.scale.width / 3) * 2
-      );
-      const nextY = currentY - this.lineSegmentLength;
-
-      if (nextY < currentY) {
-        this.linePoints.push({ x: nextX, y: nextY });
-        accumulatedLength += this.lineSegmentLength;
-        currentX = nextX;
-        currentY = nextY;
-      }
-    }
-
-    // Ensure the path ends exactly at the desired height
-    this.linePoints.push({
-      x: this.scale.width / 2,
-      y: currentY - (totalLength - accumulatedLength),
-    });
-
-    // Create Spline
-    const spline = new Phaser.Curves.Spline(this.linePoints);
-    this.path.add(spline);
-
-    this.drawPath();
-  }
-
-  drawPath() {
-    this.graphics.clear();
-    this.graphics.lineStyle(this.lineThickness, 0xffffff, 1);
-
-    // Draw the smooth path
-    this.path.draw(this.graphics);
-  }
-
-  // Update the updateLine method to include collision detection
-  updateLine() {
-    // Move each point of the spline downward
-    this.linePoints.forEach((point) => {
-      point.y += this.lineSpeed; // Move path downward
-    });
-
-    // Recreate the spline with the updated points
-    this.path = new Phaser.Curves.Path(this.scale.width / 2, this.scale.height);
-    const spline = new Phaser.Curves.Spline(this.linePoints);
-    this.path.add(spline);
-
-    // Redraw the path after updating it
-    this.drawPath();
-
-    // Check for collision with the spaceship
-    const spaceshipX = this.spaceship.x;
-  }
-
-  updateObstacles() {
-    this.obstacles.children.iterate((obstacle) => {
-      obstacle.y += obstacle.speed;
-
-      if (obstacle.y > this.scale.height + obstacle.displayHeight) {
-        obstacle.y = -obstacle.displayHeight;
-        obstacle.x = Phaser.Math.Between(0, this.scale.width);
-      }
-
-      if (
-        Phaser.Geom.Intersects.RectangleToRectangle(
-          this.spaceship.getBounds(),
-          obstacle.getBounds()
-        )
-      ) {
-        this.handleCollision(obstacle);
-        obstacle.y = -obstacle.displayHeight;
-        obstacle.x = Phaser.Math.Between(0, this.scale.width);
-      }
-    });
-  }
-
-  handleCollision(obstacle) {
-    switch (obstacle.type) {
-      case "rock":
-        this.spaceship.health -= obstacle.damage || 10; // Default damage
-        break;
-      case "power-up":
-        this.spaceship.power =
-          (this.spaceship.power || 0) + (obstacle.powerValue || 1);
-        break;
-      case "hazard":
-        this.applyHazardEffect(obstacle.effect);
-        break;
-    }
   }
 
   updateBackground() {
