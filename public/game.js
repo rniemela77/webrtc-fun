@@ -35,7 +35,8 @@ class Waver extends Phaser.Scene {
   checkSpaceshipWaveInteraction() {
     const spaceship = this.spaceship;
     const repellingForce = this.repellingForce;
-
+    const damping = this.repellingDamping;
+  
     this.waves.forEach(wave => {
       const distance = wave.getDistanceToPoint(spaceship.x, spaceship.y);
       if (distance < this.waveDetectionRadius) {
@@ -45,8 +46,12 @@ class Waver extends Phaser.Scene {
           spaceship.x,
           spaceship.y
         );
-        spaceship.x += Math.cos(angle) * repellingForce;
-        // spaceship.y -= Math.sin(angle) * repellingForce;
+        const forceX = Math.cos(angle) * repellingForce;
+        const forceY = Math.sin(angle) * repellingForce;
+  
+        // Apply the force gradually using the damping factor
+        spaceship.x += forceX * damping;
+        spaceship.y -= forceY * damping;
       }
     });
   }
@@ -93,6 +98,7 @@ class Waver extends Phaser.Scene {
     this.spaceshipBoundsPadding = 50;
     this.waveDetectionRadius = 50; // Radius to detect wave interaction
     this.repellingForce = 5; // Force to repel the spaceship
+    this.repellingDamping = 0.5; // Damping factor for smooth repelling
   }
 
   setupCamera() {
