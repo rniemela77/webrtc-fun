@@ -29,4 +29,33 @@ export default class Wave {
     this.waveStartX += 5 * direction;
     this.waveEndX += 5 * direction;
   }
+
+  getDistanceToPoint(x, y) {
+    const { waveStartX, waveStartY, waveEndX, waveEndY } = this;
+    const A = x - waveStartX;
+    const B = y - waveStartY;
+    const C = waveEndX - waveStartX;
+    const D = waveEndY - waveStartY;
+
+    const dot = A * C + B * D;
+    const len_sq = C * C + D * D;
+    const param = len_sq !== 0 ? dot / len_sq : -1;
+
+    let xx, yy;
+
+    if (param < 0) {
+      xx = waveStartX;
+      yy = waveStartY;
+    } else if (param > 1) {
+      xx = waveEndX;
+      yy = waveEndY;
+    } else {
+      xx = waveStartX + param * C;
+      yy = waveStartY + param * D;
+    }
+
+    const dx = x - xx;
+    const dy = y - yy;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
 }

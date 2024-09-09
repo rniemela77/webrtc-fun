@@ -32,6 +32,25 @@ class Waver extends Phaser.Scene {
     this.checkSpaceshipWaveInteraction(); // Check interaction and apply repelling force
   }
 
+  checkSpaceshipWaveInteraction() {
+    const spaceship = this.spaceship;
+    const repellingForce = this.repellingForce;
+
+    this.waves.forEach(wave => {
+      const distance = wave.getDistanceToPoint(spaceship.x, spaceship.y);
+      if (distance < this.waveDetectionRadius) {
+        const angle = Phaser.Math.Angle.Between(
+          wave.waveStartX,
+          wave.waveStartY,
+          spaceship.x,
+          spaceship.y
+        );
+        spaceship.x += Math.cos(angle) * repellingForce;
+        // spaceship.y -= Math.sin(angle) * repellingForce;
+      }
+    });
+  }
+
   generateWave() {
     const startX = Phaser.Math.Between(0, this.scale.width);
     const endX = Phaser.Math.Between(0, this.scale.width);
@@ -73,7 +92,7 @@ class Waver extends Phaser.Scene {
     this.cameraRotationFactor = 0.012;
     this.spaceshipBoundsPadding = 50;
     this.waveDetectionRadius = 50; // Radius to detect wave interaction
-    this.repellingForce = 2; // Force to repel the spaceship
+    this.repellingForce = 5; // Force to repel the spaceship
   }
 
   setupCamera() {
@@ -126,57 +145,6 @@ class Waver extends Phaser.Scene {
     this.cameras.main.setRotation(
       this.spaceshipSpeed * this.cameraRotationFactor
     );
-  }
-
-  checkSpaceshipWaveInteraction() {
-    const spaceshipX = this.spaceship.x;
-    const spaceshipY = this.spaceship.y;
-
-    // Wave's position and dimensions
-    const waveStartX = this.waveStartX;
-    const waveStartY = this.waveStartY;
-    const waveEndX = this.waveEndX;
-    const waveEndY = this.waveEndY;
-
-    // Calculate distance to the closest point on the wave
-    const { closestPoint, distance } = this.calculateClosestPointOnLine(
-      waveStartX, waveStartY, waveEndX, waveEndY,
-      spaceshipX, spaceshipY
-    );
-
-    // Check if the distance is within the interaction radius
-    if (distance < this.waveDetectionRadius) {
-      this.spaceship.setTint(0xcccccc); // Turn red
-
-      // Calculate direction vector from the spaceship to the closest point
-      const directionX = spaceshipX - closestPoint.x;
-      const directionY = spaceshipY - closestPoint.y;
-      const magnitude = Phaser.Math.Distance.Between(0, 0, directionX, directionY);
-      
-      // Normalize the direction vector
-      const normalizedX = directionX / magnitude;
-      const normalizedY = directionY / magnitude;
-
-      // Apply repelling force
-      this.spaceship.x += this.repellingForce * normalizedX;
-      // this.spaceship.y += this.repellingForce * normalizedY;
-    } else {
-      this.spaceship.clearTint(); // Reset color
-    }
-  }
-
-  calculateClosestPointOnLine(x1, y1, x2, y2, px, py) {
-    const lineLength = Phaser.Math.Distance.Between(x1, y1, x2, y2);
-    if (lineLength === 0) return { closestPoint: { x: x1, y: y1 }, distance: Phaser.Math.Distance.Between(px, py, x1, y1) };
-
-    const t = ((px - x1) * (x2 - x1) + (py - y1) * (y2 - y1)) / (lineLength * lineLength);
-    const closestX = x1 + t * (x2 - x1);
-    const closestY = y1 + t * (y2 - y1);
-
-    return {
-      closestPoint: { x: closestX, y: closestY },
-      distance: Phaser.Math.Distance.Between(px, py, closestX, closestY)
-    };
   }
 }
 
