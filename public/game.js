@@ -18,7 +18,7 @@ class Waver extends Phaser.Scene {
     this.setupInput();
     // this.createWave();
     this.time.addEvent({
-      delay: 3000, // 3 seconds
+      delay: 2000, // 3 seconds
       callback: this.generateWave,
       callbackScope: this,
       loop: true
@@ -46,8 +46,11 @@ class Waver extends Phaser.Scene {
           spaceship.x,
           spaceship.y
         );
-        const forceX = Math.cos(angle) * repellingForce;
-        const forceY = Math.sin(angle) * repellingForce;
+        
+        // Scale the force based on the distance
+        const scaledForce = repellingForce * (1 - distance / this.waveDetectionRadius);
+        const forceX = Math.cos(angle) * scaledForce;
+        const forceY = Math.sin(angle) * scaledForce;
   
         // Apply the force gradually using the damping factor
         spaceship.x += forceX * damping;
