@@ -11,35 +11,52 @@ class Waver extends Phaser.Scene {
   }
 
   create() {
-    this.createBackground();
-    this.createSpaceship();
-    this.initializeVariables();
-    this.setupCamera();
-    this.setupInput();
-    // this.createWave();
-    this.time.addEvent({
-      delay: 2000, // 3 seconds
-      callback: this.generateWave,
-      callbackScope: this,
-      loop: true
-    });
+      this.createBackground();
+      this.createSpaceship();
+      this.initializeVariables();
+      this.setupCamera();
+      this.setupInput();
+      // this.createWave();
+      this.time.addEvent({
+        delay: 2000, // 3 seconds
+        callback: this.generateWave,
+        callbackScope: this,
+        loop: true
+      });
+  
+      // Initialize pointer and velocity
+      this.pointer = this.input.activePointer;
+      this.spaceshipVelocity = new Phaser.Math.Vector2(0, 0);
+      this.maxSpeed = 200; // Adjust as needed
   }
 
 
   update() {
-    this.updateBackground();
-    this.updateSpaceshipMovement();
-    this.updateWaves();
-    this.checkSpaceshipWaveInteraction();
-
-    // Apply smooth movement
-    this.spaceship.x += Math.cos(Phaser.Math.DegToRad(this.spaceship.angle)) * this.spaceshipSpeed;
-    this.spaceship.y += Math.sin(Phaser.Math.DegToRad(this.spaceship.angle)) * this.spaceshipSpeed;
-
-    // Clamp positions
-    this.spaceship.x = Phaser.Math.Clamp(this.spaceship.x, this.spaceshipBoundsPadding, this.scale.width - this.spaceshipBoundsPadding);
-    this.spaceship.y = Phaser.Math.Clamp(this.spaceship.y, this.spaceshipBoundsPadding, this.scale.height - this.spaceshipBoundsPadding);
-}
+      this.updateBackground();
+      this.updateSpaceshipMovement();
+      this.updateWaves();
+      this.checkSpaceshipWaveInteraction();
+  
+      // Calculate direction to pointer
+      let direction = new Phaser.Math.Vector2(
+          this.pointer.x - this.spaceship.x,
+          this.pointer.y - this.spaceship.y
+      );
+  
+      // Normalize direction and scale by max speed
+      direction.normalize().scale(this.maxSpeed);
+  
+      // Gradually adjust velocity towards target direction
+      this.spaceshipVelocity.lerp(direction, 0.1); // Adjust lerp factor for smoothness
+  
+      // Apply velocity to spaceship position
+      this.spaceship.x += this.spaceshipVelocity.x * this.game.loop.delta / 1000;
+      this.spaceship.y += this.spaceshipVelocity.y * this.game.loop.delta / 1000;
+  
+      // Clamp positions
+      this.spaceship.x = Phaser.Math.Clamp(this.spaceship.x, this.spaceshipBoundsPadding, this.scale.width - this.spaceshipBoundsPadding);
+      this.spaceship.y = Phaser.Math.Clamp(this.spaceship.y, this.spaceshipBoundsPadding, this.scale.height - this.spaceshipBoundsPadding);
+  }
 
 
 
@@ -129,7 +146,11 @@ class Waver extends Phaser.Scene {
   }
 
   setupInput() {
-    this.cursors = this.input.keyboard.createCursorKeys();
+      this.cursors = this.input.keyboard.createCursorKeys();
+  
+      this.input.on('pointermove', (pointer) => {
+          this.pointer = pointer;
+      });
   }
 
   updateBackground() {
