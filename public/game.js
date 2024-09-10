@@ -23,6 +23,33 @@ class Waver extends Phaser.Scene {
       callbackScope: this,
       loop: true
     });
+
+    this.input.on('pointerdown', this.handleTouchInput, this);
+    this.input.on('pointermove', this.handleTouchInput, this);
+  }
+
+  handleTouchInput(pointer) {
+    if (pointer.isDown) {
+      const touchX = pointer.x;
+      const touchY = pointer.y;
+
+      // Calculate angle based on touch position
+      const angleToPointer = Phaser.Math.Angle.Between(
+        this.spaceship.x,
+        this.spaceship.y,
+        touchX,
+        touchY
+      );
+
+      // Rotate spaceship towards touch position
+      this.spaceship.angle = Phaser.Math.RadToDeg(angleToPointer);
+
+      // Accelerate spaceship
+      this.spaceshipSpeed = Math.min(
+        this.spaceshipSpeed + this.acceleration,
+        this.maxSpeed
+      );
+    }
   }
 
   update() {
@@ -30,6 +57,31 @@ class Waver extends Phaser.Scene {
     this.updateSpaceshipMovement();
     this.updateWaves();
     this.checkSpaceshipWaveInteraction(); // Check interaction and apply repelling force
+
+    // Apply smooth movement
+    this.spaceship.x += Math.cos(Phaser.Math.DegToRad(this.spaceship.angle)) * this.spaceshipSpeed;
+    this.spaceship.y += Math.sin(Phaser.Math.DegToRad(this.spaceship.angle)) * this.spaceshipSpeed;
+
+    this.spaceship.x = Phaser.Math.Clamp(
+      this.spaceship.x,
+      this.spaceshipBoundsPadding,
+      this.scale.width - this.spaceshipBoundsPadding
+    );
+    this.spaceship.y = Phaser.Math.Clamp(
+      this.spaceship.y,
+      this.spaceshipBoundsPadding,
+      this.scale.height - this.spaceshipBoundsPadding
+    );
+
+    // Smooth rotation
+    this.spaceship.angle = Phaser.Math.Angle.Wrap(this.spaceship.angle);
+  }
+
+
+  updateCamera() {
+    this.cameras.main.setRotation(
+      this.spaceshipSpeed * this.cameraRotationFactor
+    );
   }
 
   checkSpaceshipWaveInteraction() {
