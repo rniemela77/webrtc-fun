@@ -5,6 +5,7 @@ export default class Wave {
     this.waveStartY = 0;
     this.waveEndX = endX;
     this.waveEndY = scene.scale.height;
+    this.waveSpeed = Math.random() * 3 + 1;
 
     if (startX > endX) {
       this.waveStartX += scene.scale.width;
@@ -25,9 +26,9 @@ export default class Wave {
 
   update() {
     const direction = this.waveStartX < this.waveEndX ? 1 : -1;
-    this.wave.x += 5 * direction;
-    this.waveStartX += 5 * direction;
-    this.waveEndX += 5 * direction;
+    this.wave.x += this.waveSpeed * direction;
+    this.waveStartX += this.waveSpeed * direction;
+    this.waveEndX += this.waveSpeed * direction;
   }
 
   getDistanceToPoint(x, y) {
