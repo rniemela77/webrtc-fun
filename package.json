@@ -4,7 +4,7 @@
   "description": "PhaserJS with WebRTC",
   "main": "index.js",
   "scripts": {
-    "start": "browser-sync start --server 'public' --files 'public' --host '192.168.1.25' --port 3000 --no-notify --no-open",
+    "start": "browser-sync start --server 'public' --serveStatic 'node_modules' --files 'public' --host '192.168.1.25' --port 3000 --no-notify --no-open",
     "start-server": "nodemon server.js"
   },
   "keywords": [],
@@ -13,6 +13,7 @@
   "dependencies": {
     "express": "^4.19.2",
     "phaser": "^3.80.1",
+    "phaser3-rex-plugins": "^1.80.7",
     "simple-peer": "^9.11.1",
     "socket.io": "^4.7.5",
     "socket.io-client": "^4.7.5",

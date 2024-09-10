@@ -1,4 +1,8 @@
+
+
+console.log('test');
 import Wave from "./wave.js";
+// import RexVirtualJoystick from "/node_modules/phaser3-rex-plugins/plugins/virtualjoystick.js";
 
 class Waver extends Phaser.Scene {
   constructor() {
@@ -8,6 +12,8 @@ class Waver extends Phaser.Scene {
 
   preload() {
     this.loadImages();
+    this.load.plugin('rexvirtualjoystickplugin', '../node_modules/phaser3-rex-plugins/plugins/virtualjoystick.js', true);
+
   }
 
   create() {
@@ -15,7 +21,7 @@ class Waver extends Phaser.Scene {
     this.createSpaceship();
     this.initializeVariables();
     this.setupCamera();
-    this.setupInput();
+    this.input.on('pointerdown', this.createVirtualJoystick, this);
     // this.createWave();
     this.time.addEvent({
       delay: 3000, // 3 seconds
@@ -37,6 +43,7 @@ class Waver extends Phaser.Scene {
     this.updateWaves();
     this.checkSpaceshipWaveInteraction();
     this.updateCamera();
+    this.updateVirtualJoystickMovement();
 
     // Calculate direction to pointer's X position
     let directionX = this.pointer.x - this.spaceship.x;
@@ -71,6 +78,49 @@ class Waver extends Phaser.Scene {
 
     // Draw tether
     this.drawTether();
+  }
+  
+  createVirtualJoystick(pointer) {
+    if (this.joystick) {
+      // Set opacity to 1 and update position if joystick already exists
+      this.joystick.base.setAlpha(1);
+      this.joystick.thumb.setAlpha(1);
+      this.joystick.setPosition(pointer.x, pointer.y);
+    } else {
+      // Create joystick if it doesn't exist
+      this.joystick = this.plugins.get('rexvirtualjoystickplugin').add(this, {
+        x: pointer.x,
+        y: pointer.y,
+        radius: 100,
+        base: this.add.circle(0, 0, 100, 0x888888),
+        thumb: this.add.circle(0, 0, 50, 0xcccccc),
+        dir: '8dir', // 'up&down', 'left&right', '4dir', '8dir'
+        forceMin: 16,
+        enable: true
+      });
+    }
+
+    // Add pointerup event listener to hide joystick
+    this.input.on('pointerup', this.hideVirtualJoystick, this);
+  }
+
+  hideVirtualJoystick() {
+    if (this.joystick) {
+      this.joystick.base.setAlpha(0);
+      this.joystick.thumb.setAlpha(0);
+    }
+  }
+
+  updateVirtualJoystickMovement() {
+    if (!this.joystick || typeof this.joystick.force === 'undefined') {
+      return;
+    }
+    const forceX = this.joystick.forceX || 0;
+    const forceY = this.joystick.forceY || 0;
+    const maxSpeed = this.maxSpeed * (this.joystick.force || 0);
+
+    this.spaceship.x += forceX * maxSpeed;
+    this.spaceship.y += forceY * maxSpeed;
   }
 
   setupInput() {
@@ -191,6 +241,7 @@ class Waver extends Phaser.Scene {
 
   updateSpaceshipMovement() {
     const cursors = this.cursors;
+    return;
 
     if (cursors.left.isDown) {
       this.spaceshipSpeed = Math.max(
