@@ -1,6 +1,4 @@
-
-
-console.log('test');
+console.log("test");
 import Wave from "./wave.js";
 // import RexVirtualJoystick from "/node_modules/phaser3-rex-plugins/plugins/virtualjoystick.js";
 
@@ -12,8 +10,11 @@ class Waver extends Phaser.Scene {
 
   preload() {
     this.loadImages();
-    this.load.plugin('rexvirtualjoystickplugin', '../node_modules/phaser3-rex-plugins/plugins/virtualjoystick.js', true);
-
+    this.load.plugin(
+      "rexvirtualjoystickplugin",
+      "../node_modules/phaser3-rex-plugins/plugins/virtualjoystick.js",
+      true
+    );
   }
 
   create() {
@@ -21,7 +22,7 @@ class Waver extends Phaser.Scene {
     this.createSpaceship();
     this.initializeVariables();
     this.setupCamera();
-    this.input.on('pointerdown', this.createVirtualJoystick, this);
+    this.input.on("pointerdown", this.createVirtualJoystick, this);
     // this.createWave();
     this.time.addEvent({
       delay: 3000, // 3 seconds
@@ -34,7 +35,6 @@ class Waver extends Phaser.Scene {
     this.pointer = this.input.activePointer;
     this.spaceshipVelocity = new Phaser.Math.Vector2(0, 0);
     this.maxSpeed = 200; // Adjust as needed
-    this.maxTetherLength = 300; // Adjust as needed
   }
 
   update() {
@@ -45,25 +45,15 @@ class Waver extends Phaser.Scene {
     this.updateCamera();
     this.updateVirtualJoystickMovement();
 
-    // Calculate direction to pointer's X position
-    let directionX = this.pointer.x - this.spaceship.x;
-
-    // Clamp the direction to the max tether length
-    directionX = Phaser.Math.Clamp(
-      directionX,
-      -this.maxTetherLength,
-      this.maxTetherLength
-    );
-
     // Normalize direction and scale by max speed
-    let velocityX = (directionX / this.maxTetherLength) * this.maxSpeed;
+    // let velocityX = (directionX / this.maxTetherLength) * this.maxSpeed;
 
     // Gradually adjust velocity towards target direction
-    this.spaceshipVelocity.x = Phaser.Math.Linear(
-      this.spaceshipVelocity.x,
-      velocityX,
-      0.1
-    ); // Adjust lerp factor for smoothness
+    // this.spaceshipVelocity.x = Phaser.Math.Linear(
+    //   this.spaceshipVelocity.x,
+    //   velocityX,
+    //   0.1
+    // ); // Adjust lerp factor for smoothness
 
     // Apply velocity to spaceship position
     this.spaceship.x +=
@@ -77,31 +67,32 @@ class Waver extends Phaser.Scene {
     );
 
     // Draw tether
-    this.drawTether();
+    // this.drawTether();
   }
-  
+
   createVirtualJoystick(pointer) {
     if (this.joystick) {
       // Set opacity to 1 and update position if joystick already exists
-      this.joystick.base.setAlpha(1);
-      this.joystick.thumb.setAlpha(1);
+      this.joystick.base.setAlpha(0.2);
+      this.joystick.thumb.setAlpha(0.2);
       this.joystick.setPosition(pointer.x, pointer.y);
     } else {
       // Create joystick if it doesn't exist
-      this.joystick = this.plugins.get('rexvirtualjoystickplugin').add(this, {
+      this.joystick = this.plugins.get("rexvirtualjoystickplugin").add(this, {
         x: pointer.x,
         y: pointer.y,
-        radius: 100,
-        base: this.add.circle(0, 0, 100, 0x888888),
-        thumb: this.add.circle(0, 0, 50, 0xcccccc),
-        dir: '8dir', // 'up&down', 'left&right', '4dir', '8dir'
-        forceMin: 16,
-        enable: true
+        radius: 50,
+        deadzone: 20,
+        base: this.add.circle(0, 0, 50, 0x888888),
+        thumb: this.add.circle(0, 0, 20, 0xcccccc),
+        dir: "8dir", // 'up&down', 'left&right', '4dir', '8dir'
+        forceMin: 1, // Minimum force of stick when dragging. 0 to 1
+        enable: true, // Enable the joystick
       });
     }
 
     // Add pointerup event listener to hide joystick
-    this.input.on('pointerup', this.hideVirtualJoystick, this);
+    this.input.on("pointerup", this.hideVirtualJoystick, this);
   }
 
   hideVirtualJoystick() {
@@ -110,36 +101,76 @@ class Waver extends Phaser.Scene {
       this.joystick.thumb.setAlpha(0);
     }
   }
-
   updateVirtualJoystickMovement() {
     if (!this.joystick || typeof this.joystick.force === 'undefined') {
       return;
     }
+  
+    // Sensitivity factor to reduce the sensitivity of the joystick
+    const sensitivity = 0.01;
+  
+    // Get joystick force
     const forceX = this.joystick.forceX || 0;
     const forceY = this.joystick.forceY || 0;
-    const maxSpeed = this.maxSpeed * (this.joystick.force || 0);
-
-    this.spaceship.x += forceX * maxSpeed;
-    this.spaceship.y += forceY * maxSpeed;
-  }
-
-  setupInput() {
-    this.input.on("pointermove", (pointer) => {
-      this.pointer = pointer;
-    });
-  }
-
-  drawTether() {
-    if (this.graphics) {
-      this.graphics.clear();
+  
+    // Calculate the magnitude of the force
+    const forceMagnitude = Math.sqrt(forceX * forceX + forceY * forceY);
+    if (forceMagnitude > 0) {
+      // Normalize the force
+      const normalizedForceX = forceX / forceMagnitude;
+      const normalizedForceY = forceY / forceMagnitude;
+  
+      // Scale the force by max speed and sensitivity
+      const maxSpeed = this.maxSpeed * (this.joystick.force || 0) * sensitivity;
+      const velocityX = normalizedForceX * maxSpeed;
+      const velocityY = normalizedForceY * maxSpeed;
+  
+      // Gradually adjust velocity towards target direction
+      this.spaceshipVelocity.x = Phaser.Math.Linear(
+        this.spaceshipVelocity.x,
+        velocityX,
+        0.1
+      );
+      this.spaceshipVelocity.y = Phaser.Math.Linear(
+        this.spaceshipVelocity.y,
+        velocityY,
+        0.1
+      );
     } else {
-      this.graphics = this.add.graphics();
+      // If no force, gradually reduce velocity to zero
+      this.spaceshipVelocity.x = Phaser.Math.Linear(
+        this.spaceshipVelocity.x,
+        0,
+        0.1
+      );
+      this.spaceshipVelocity.y = Phaser.Math.Linear(
+        this.spaceshipVelocity.y,
+        0,
+        0.1
+      );
     }
-    this.graphics.lineStyle(2, 0xffffff, 1);
-    this.graphics.beginPath();
-    this.graphics.moveTo(this.spaceship.x, this.spaceship.y);
-    this.graphics.lineTo(this.pointer.x, this.spaceship.y);
-    this.graphics.strokePath();
+  
+    const MAX_SPACESHIP_SPEED = 100; // Define a maximum speed constant
+    
+    // Clamp spaceship velocity
+    this.spaceshipVelocity.x = Phaser.Math.Clamp(this.spaceshipVelocity.x, -MAX_SPACESHIP_SPEED, MAX_SPACESHIP_SPEED);
+    this.spaceshipVelocity.y = Phaser.Math.Clamp(this.spaceshipVelocity.y, -MAX_SPACESHIP_SPEED, MAX_SPACESHIP_SPEED);
+    
+    // Apply velocity to spaceship position
+    this.spaceship.x += (this.spaceshipVelocity.x * this.game.loop.delta) / 1000;
+    this.spaceship.y += (this.spaceshipVelocity.y * this.game.loop.delta) / 1000;
+    
+    // Clamp positions
+    this.spaceship.x = Phaser.Math.Clamp(
+      this.spaceship.x,
+      this.spaceshipBoundsPadding,
+      this.scale.width - this.spaceshipBoundsPadding
+    );
+    this.spaceship.y = Phaser.Math.Clamp(
+      this.spaceship.y,
+      this.spaceshipBoundsPadding,
+      this.scale.height - this.spaceshipBoundsPadding
+    );
   }
 
   updateCamera() {
