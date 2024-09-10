@@ -159,14 +159,14 @@ class Waver extends Phaser.Scene {
   initializeVariables() {
     this.spaceshipSpeed = 0;
     this.maxSpeed = 5;
-    this.acceleration = 0.2;
-    this.deceleration = 0.05;
+    this.acceleration = 0.2; // Reduced acceleration for smoother speed up
+    this.deceleration = 0.02; // Reduced deceleration for smoother slow down
     this.backgroundSpeed = 5;
     this.cameraZoom = 1.3;
     this.cameraRotationFactor = 0.012;
     this.spaceshipBoundsPadding = 50;
     this.waveDetectionRadius = 150; // Radius to detect wave interaction
-    this.repellingForce = 4; // Force to repel the spaceship
+    this.repellingForce = 3; // Force to repel the spaceship
     this.repellingDamping = 0.5; // Damping factor for smooth repelling
   }
 
