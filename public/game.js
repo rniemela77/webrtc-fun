@@ -105,7 +105,7 @@ class Waver extends Phaser.Scene {
         const forceY = Math.sin(angle) * scaledForce;
   
         // Apply the force gradually using the damping factor
-        spaceship.x += forceX * damping;
+        spaceship.x += forceX * (damping * 5);
         spaceship.y -= forceY * damping;
       }
     });
