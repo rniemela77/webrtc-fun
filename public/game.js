@@ -1,4 +1,4 @@
-import Wave from './wave.js';
+import Wave from "./wave.js";
 
 class Waver extends Phaser.Scene {
   constructor() {
@@ -11,54 +11,86 @@ class Waver extends Phaser.Scene {
   }
 
   create() {
-      this.createBackground();
-      this.createSpaceship();
-      this.initializeVariables();
-      this.setupCamera();
-      this.setupInput();
-      // this.createWave();
-      this.time.addEvent({
-        delay: 2000, // 3 seconds
-        callback: this.generateWave,
-        callbackScope: this,
-        loop: true
-      });
-  
-      // Initialize pointer and velocity
-      this.pointer = this.input.activePointer;
-      this.spaceshipVelocity = new Phaser.Math.Vector2(0, 0);
-      this.maxSpeed = 200; // Adjust as needed
-  }
+    this.createBackground();
+    this.createSpaceship();
+    this.initializeVariables();
+    this.setupCamera();
+    this.setupInput();
+    // this.createWave();
+    this.time.addEvent({
+      delay: 3000, // 3 seconds
+      callback: this.generateWave,
+      callbackScope: this,
+      loop: true,
+    });
 
+    // Initialize pointer and velocity
+    this.pointer = this.input.activePointer;
+    this.spaceshipVelocity = new Phaser.Math.Vector2(0, 0);
+    this.maxSpeed = 200; // Adjust as needed
+    this.maxTetherLength = 300; // Adjust as needed
+  }
 
   update() {
-      this.updateBackground();
-      this.updateSpaceshipMovement();
-      this.updateWaves();
-      this.checkSpaceshipWaveInteraction();
-  
-      // Calculate direction to pointer
-      let direction = new Phaser.Math.Vector2(
-          this.pointer.x - this.spaceship.x,
-          this.pointer.y - this.spaceship.y
-      );
-  
-      // Normalize direction and scale by max speed
-      direction.normalize().scale(this.maxSpeed);
-  
-      // Gradually adjust velocity towards target direction
-      this.spaceshipVelocity.lerp(direction, 0.1); // Adjust lerp factor for smoothness
-  
-      // Apply velocity to spaceship position
-      this.spaceship.x += this.spaceshipVelocity.x * this.game.loop.delta / 1000;
-      this.spaceship.y += this.spaceshipVelocity.y * this.game.loop.delta / 1000;
-  
-      // Clamp positions
-      this.spaceship.x = Phaser.Math.Clamp(this.spaceship.x, this.spaceshipBoundsPadding, this.scale.width - this.spaceshipBoundsPadding);
-      this.spaceship.y = Phaser.Math.Clamp(this.spaceship.y, this.spaceshipBoundsPadding, this.scale.height - this.spaceshipBoundsPadding);
+    this.updateBackground();
+    this.updateSpaceshipMovement();
+    this.updateWaves();
+    this.checkSpaceshipWaveInteraction();
+    this.updateCamera();
+
+    // Calculate direction to pointer's X position
+    let directionX = this.pointer.x - this.spaceship.x;
+
+    // Clamp the direction to the max tether length
+    directionX = Phaser.Math.Clamp(
+      directionX,
+      -this.maxTetherLength,
+      this.maxTetherLength
+    );
+
+    // Normalize direction and scale by max speed
+    let velocityX = (directionX / this.maxTetherLength) * this.maxSpeed;
+
+    // Gradually adjust velocity towards target direction
+    this.spaceshipVelocity.x = Phaser.Math.Linear(
+      this.spaceshipVelocity.x,
+      velocityX,
+      0.1
+    ); // Adjust lerp factor for smoothness
+
+    // Apply velocity to spaceship position
+    this.spaceship.x +=
+      (this.spaceshipVelocity.x * this.game.loop.delta) / 1000;
+
+    // Clamp positions
+    this.spaceship.x = Phaser.Math.Clamp(
+      this.spaceship.x,
+      this.spaceshipBoundsPadding,
+      this.scale.width - this.spaceshipBoundsPadding
+    );
+
+    // Draw tether
+    this.drawTether();
   }
 
+  setupInput() {
+    this.input.on("pointermove", (pointer) => {
+      this.pointer = pointer;
+    });
+  }
 
+  drawTether() {
+    if (this.graphics) {
+      this.graphics.clear();
+    } else {
+      this.graphics = this.add.graphics();
+    }
+    this.graphics.lineStyle(2, 0xffffff, 1);
+    this.graphics.beginPath();
+    this.graphics.moveTo(this.spaceship.x, this.spaceship.y);
+    this.graphics.lineTo(this.pointer.x, this.spaceship.y);
+    this.graphics.strokePath();
+  }
 
   updateCamera() {
     this.cameras.main.setRotation(
@@ -70,8 +102,8 @@ class Waver extends Phaser.Scene {
     const spaceship = this.spaceship;
     const repellingForce = this.repellingForce;
     const damping = this.repellingDamping;
-  
-    this.waves.forEach(wave => {
+
+    this.waves.forEach((wave) => {
       const distance = wave.getDistanceToPoint(spaceship.x, spaceship.y);
       if (distance < this.waveDetectionRadius) {
         const angle = Phaser.Math.Angle.Between(
@@ -80,12 +112,13 @@ class Waver extends Phaser.Scene {
           spaceship.x,
           spaceship.y
         );
-        
+
         // Scale the force based on the distance
-        const scaledForce = repellingForce * (1 - distance / this.waveDetectionRadius);
+        const scaledForce =
+          repellingForce * (1 - distance / this.waveDetectionRadius);
         const forceX = Math.cos(angle) * scaledForce;
         const forceY = Math.sin(angle) * scaledForce;
-  
+
         // Apply the force gradually using the damping factor
         spaceship.x += forceX * (damping * 5);
         spaceship.y -= forceY * damping;
@@ -101,9 +134,8 @@ class Waver extends Phaser.Scene {
   }
 
   updateWaves() {
-    this.waves.forEach(wave => wave.update());
+    this.waves.forEach((wave) => wave.update());
   }
-
 
   loadImages() {
     this.load.image("background", "path/to/background.png");
@@ -133,8 +165,8 @@ class Waver extends Phaser.Scene {
     this.cameraZoom = 1.3;
     this.cameraRotationFactor = 0.012;
     this.spaceshipBoundsPadding = 50;
-    this.waveDetectionRadius = 50; // Radius to detect wave interaction
-    this.repellingForce = 5; // Force to repel the spaceship
+    this.waveDetectionRadius = 150; // Radius to detect wave interaction
+    this.repellingForce = 4; // Force to repel the spaceship
     this.repellingDamping = 0.5; // Damping factor for smooth repelling
   }
 
@@ -146,11 +178,11 @@ class Waver extends Phaser.Scene {
   }
 
   setupInput() {
-      this.cursors = this.input.keyboard.createCursorKeys();
-  
-      this.input.on('pointermove', (pointer) => {
-          this.pointer = pointer;
-      });
+    this.cursors = this.input.keyboard.createCursorKeys();
+
+    this.input.on("pointermove", (pointer) => {
+      this.pointer = pointer;
+    });
   }
 
   updateBackground() {
