@@ -223,44 +223,6 @@ class Waver extends Phaser.Scene {
       this.scale.height - this.spaceshipBoundsPadding
     );
   }
-
-  updateSpaceshipMovement() {
-    const cursors = this.cursors;
-    return;
-
-    if (cursors.left.isDown) {
-      this.spaceshipSpeed = Math.max(
-        this.spaceshipSpeed - this.acceleration,
-        -this.maxSpeed
-      );
-      this.spaceship.angle -= 3; // Rotate left
-    } else if (cursors.right.isDown) {
-      this.spaceshipSpeed = Math.min(
-        this.spaceshipSpeed + this.acceleration,
-        this.maxSpeed
-      );
-      this.spaceship.angle += 3; // Rotate right
-    } else {
-      this.spaceshipSpeed *= 1 - this.deceleration;
-    }
-
-    // Apply smooth movement
-    this.spaceship.x += this.spaceshipSpeed;
-    this.spaceship.x = Phaser.Math.Clamp(
-      this.spaceship.x,
-      this.spaceshipBoundsPadding,
-      this.scale.width - this.spaceshipBoundsPadding
-    );
-
-    // Smooth rotation
-    this.spaceship.angle = Phaser.Math.Angle.Wrap(this.spaceship.angle);
-  }
-
-  updateCamera() {
-    this.cameras.main.setRotation(
-      this.spaceshipSpeed * this.cameraRotationFactor
-    );
-  }
 }
 
 const config = {
