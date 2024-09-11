@@ -1,7 +1,4 @@
-console.log("test");
 import Wave from "./wave.js";
-// import RexVirtualJoystick from "/node_modules/phaser3-rex-plugins/plugins/virtualjoystick.js";
-
 class Waver extends Phaser.Scene {
   constructor() {
     super({ key: "Racer" });
@@ -23,13 +20,7 @@ class Waver extends Phaser.Scene {
     this.initializeVariables();
     this.setupCamera();
     this.input.on("pointerdown", this.createVirtualJoystick, this);
-    // this.createWave();
-    this.time.addEvent({
-      delay: 3000, // 3 seconds
-      callback: this.generateWave,
-      callbackScope: this,
-      loop: true,
-    });
+    this.generateWaves();
 
     // Initialize pointer and velocity
     this.pointer = this.input.activePointer;
@@ -46,71 +37,69 @@ class Waver extends Phaser.Scene {
     this.updateVirtualJoystickMovement();
     this.checkSpaceshipWaveInteraction();
 
-    // Normalize direction and scale by max speed
-    // let velocityX = (directionX / this.maxTetherLength) * this.maxSpeed;
-
-    // Gradually adjust velocity towards target direction
-    // this.spaceshipVelocity.x = Phaser.Math.Linear(
-    //   this.spaceshipVelocity.x,
-    //   velocityX,
-    //   0.1
-    // ); // Adjust lerp factor for smoothness
-
     // Apply velocity to spaceship position
     this.spaceship.x +=
       (this.spaceshipVelocity.x * this.game.loop.delta) / 1000;
 
-    // Clamp positions
-    this.spaceship.x = Phaser.Math.Clamp(
-      this.spaceship.x,
-      this.spaceshipBoundsPadding,
-      this.scale.width - this.spaceshipBoundsPadding
-    );
+    
   }
 
   createVirtualJoystick(pointer) {
     // If joystick exists, update its position
     if (this.joystick) {
-        this.joystick.setPosition(pointer.x, pointer.y);
+      this.joystick.setPosition(pointer.x, pointer.y);
     } else {
-        // Create joystick
-        this.joystick = this.plugins.get("rexvirtualjoystickplugin").add(this, {
-            // where on the screen it is seen
-            x: pointer.x,
-            y: pointer.y,
-            radius: 50,
-            deadzone: 20,
-            base: this.add.circle(0, 0, 50, 0x888888),
-            thumb: this.add.circle(0, 0, 20, 0xcccccc),
-            dir: "8dir", // 'up&down', 'left&right', '4dir', '8dir'
-            forceMin: 1, // Minimum force of stick when dragging. 0 to 1
-            enable: true, // Enable the joystick
-        });
+      // Create joystick
+      this.joystick = this.plugins.get("rexvirtualjoystickplugin").add(this, {
+        // where on the screen it is seen
+        x: pointer.x,
+        y: pointer.y,
+        radius: 50,
+        deadzone: 20,
+        base: this.add.circle(0, 0, 50, 0x888888),
+        thumb: this.add.circle(0, 0, 20, 0xcccccc),
+        dir: "8dir", // 'up&down', 'left&right', '4dir', '8dir'
+        forceMin: 1, // Minimum force of stick when dragging. 0 to 1
+        enable: true, // Enable the joystick
+      });
     }
   }
 
   hideVirtualJoystick() {
     if (this.joystick) {
-        this.joystick.base.setAlpha(0); // Optional: make it invisible if needed
-        this.joystick.thumb.setAlpha(0); // Optional: make it invisible if needed
+      this.joystick.base.setAlpha(0); // Optional: make it invisible if needed
+      this.joystick.thumb.setAlpha(0); // Optional: make it invisible if needed
     }
   }
   updateVirtualJoystickMovement() {
     if (!this.joystick || !this.joystick.force) return;
 
     const sensitivity = 0.01;
-    const velocity = new Phaser.Math.Vector2(this.joystick.forceX, this.joystick.forceY);
-    
+    const velocity = new Phaser.Math.Vector2(
+      this.joystick.forceX,
+      this.joystick.forceY
+    );
+
     if (velocity.length() > 0) {
-      velocity.normalize().scale(this.joystick.force * this.maxSpeed * sensitivity);
+      velocity
+        .normalize()
+        .scale(this.joystick.force * this.maxSpeed * sensitivity);
       this.spaceshipVelocity.lerp(velocity, 0.1); // Smooth transition
     } else {
       this.spaceshipVelocity.scale(0.9); // Gradual stop
     }
 
     const maxVelocity = 100;
-    this.spaceshipVelocity.x = Phaser.Math.Clamp(this.spaceshipVelocity.x, -maxVelocity, maxVelocity);
-    this.spaceshipVelocity.y = Phaser.Math.Clamp(this.spaceshipVelocity.y, -maxVelocity, maxVelocity);
+    this.spaceshipVelocity.x = Phaser.Math.Clamp(
+      this.spaceshipVelocity.x,
+      -maxVelocity,
+      maxVelocity
+    );
+    this.spaceshipVelocity.y = Phaser.Math.Clamp(
+      this.spaceshipVelocity.y,
+      -maxVelocity,
+      maxVelocity
+    );
   }
 
   updateCamera() {
@@ -147,11 +136,18 @@ class Waver extends Phaser.Scene {
     });
   }
 
-  generateWave() {
-    const startX = Phaser.Math.Between(0, this.scale.width);
-    const endX = Phaser.Math.Between(0, this.scale.width);
-    const wave = new Wave(this, startX, endX);
-    this.waves.push(wave);
+  generateWaves() {
+    this.time.addEvent({
+      delay: 3000, // 3 seconds
+      callback: () => {
+        const startX = Phaser.Math.Between(0, this.scale.width);
+        const endX = Phaser.Math.Between(0, this.scale.width);
+        const wave = new Wave(this, startX, endX);
+        this.waves.push(wave);
+      },
+      callbackScope: this,
+      loop: true,
+    });
   }
 
   updateWaves() {
@@ -210,13 +206,22 @@ class Waver extends Phaser.Scene {
     this.background.tilePositionY -= this.backgroundSpeed;
   }
 
-
   updateSpaceshipPosition() {
-    this.spaceship.x += (this.spaceshipVelocity.x * this.game.loop.delta) / 1000;
-    this.spaceship.y += (this.spaceshipVelocity.y * this.game.loop.delta) / 1000;
+    this.spaceship.x +=
+      (this.spaceshipVelocity.x * this.game.loop.delta) / 1000;
+    this.spaceship.y +=
+      (this.spaceshipVelocity.y * this.game.loop.delta) / 1000;
 
-    this.spaceship.x = Phaser.Math.Clamp(this.spaceship.x, 50, this.scale.width - 50);
-    this.spaceship.y = Phaser.Math.Clamp(this.spaceship.y, 50, this.scale.height - 50);
+    this.spaceship.x = Phaser.Math.Clamp(
+      this.spaceship.x,
+      this.spaceshipBoundsPadding,
+      this.scale.width - this.spaceshipBoundsPadding
+    );
+    this.spaceship.y = Phaser.Math.Clamp(
+      this.spaceship.y,
+      this.spaceshipBoundsPadding,
+      this.scale.height - this.spaceshipBoundsPadding
+    );
   }
 
   updateSpaceshipMovement() {
