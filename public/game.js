@@ -21,27 +21,17 @@ class Waver extends Phaser.Scene {
     this.setupCamera();
     this.input.on("pointerdown", this.createVirtualJoystick, this);
     this.generateWaves();
-
-    // Initialize pointer and velocity
-    this.pointer = this.input.activePointer;
-    this.spaceshipVelocity = new Phaser.Math.Vector2(0, 0);
-    this.maxSpeed = 200; // Adjust as needed
-  }
+    }
 
   update() {
     this.updateBackground();
-    this.updateSpaceshipMovement();
     this.updateWaves();
     this.checkSpaceshipWaveInteraction();
     this.updateCamera();
     this.updateVirtualJoystickMovement();
     this.checkSpaceshipWaveInteraction();
+    this.updateSpaceshipPosition();
 
-    // Apply velocity to spaceship position
-    this.spaceship.x +=
-      (this.spaceshipVelocity.x * this.game.loop.delta) / 1000;
-
-    
   }
 
   createVirtualJoystick(pointer) {
@@ -174,12 +164,15 @@ class Waver extends Phaser.Scene {
   }
 
   initializeVariables() {
+    this.pointer = this.input.activePointer;
+    this.spaceshipVelocity = new Phaser.Math.Vector2(0, 0);
+    this.maxSpeed = 200; // Adjust as needed  
     this.spaceshipSpeed = 0;
-    this.maxSpeed = 5;
-    this.acceleration = 0.2; // Reduced acceleration for smoother speed up
+    this.maxSpeed = 25;
+    this.acceleration = 0.1; // Reduced acceleration for smoother speed up
     this.deceleration = 0.02; // Reduced deceleration for smoother slow down
-    this.backgroundSpeed = 5;
-    this.cameraZoom = 1.3;
+    this.backgroundSpeed = 3;
+    this.cameraZoom = 1.2;
     this.cameraRotationFactor = 0.012;
     this.spaceshipBoundsPadding = 50;
     this.waveDetectionRadius = 150; // Radius to detect wave interaction
