@@ -73,8 +73,6 @@ class Waver extends Phaser.Scene {
     const adjustedX = (pointer.x / zoom) + scrollX;
     const adjustedY = (pointer.y / zoom) + scrollY;
   
-    console.log(`Pointer: (${pointer.x}, ${pointer.y}), Adjusted: (${adjustedX}, ${adjustedY})`);
-  
     // If joystick exists, update its position
     if (this.joystick) {
       this.joystick.setPosition(adjustedX, adjustedY);
