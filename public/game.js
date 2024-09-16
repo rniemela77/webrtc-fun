@@ -20,6 +20,7 @@ class Waver extends Phaser.Scene {
     this.initializeVariables();
     this.setupCamera();
     this.input.on("pointerdown", this.createVirtualJoystick, this);
+    this.input.on("pointerup", this.hideVirtualJoystick, this);
     this.generateWaves();
   }
 
@@ -63,6 +64,7 @@ class Waver extends Phaser.Scene {
     // If joystick exists, update its position
     if (this.joystick) {
       this.joystick.setPosition(pointer.x, pointer.y);
+      this.showVirtualJoystick();
     } else {
       // Create joystick
       this.joystick = this.plugins.get("rexvirtualjoystickplugin").add(this, {
@@ -74,9 +76,16 @@ class Waver extends Phaser.Scene {
         base: this.add.circle(0, 0, 50, 0x888888),
         thumb: this.add.circle(0, 0, 20, 0xcccccc),
         dir: "8dir", // 'up&down', 'left&right', '4dir', '8dir'
-        forceMin: 1, // Minimum force of stick when dragging. 0 to 1
+        forceMin: 5, // Minimum force of stick when dragging. 0 to 1
         enable: true, // Enable the joystick
       });
+    }
+  }
+
+  showVirtualJoystick() {
+    if (this.joystick) {
+      this.joystick.base.setAlpha(1); // Optional: make it visible if needed
+      this.joystick.thumb.setAlpha(1); // Optional: make it visible if needed
     }
   }
 
