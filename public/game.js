@@ -187,9 +187,8 @@ class Waver extends Phaser.Scene {
   initializeVariables() {
     this.pointer = this.input.activePointer;
     this.spaceshipVelocity = new Phaser.Math.Vector2(0, 0);
-    this.maxSpeed = 200; // Adjust as needed
     this.spaceshipSpeed = 0;
-    this.maxSpeed = 25;
+    this.maxSpeed = 2;
     this.acceleration = 0.1; // Reduced acceleration for smoother speed up
     this.deceleration = 0.02; // Reduced deceleration for smoother slow down
     this.backgroundSpeed = 3;
