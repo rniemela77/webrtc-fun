@@ -73,6 +73,8 @@ class Waver extends Phaser.Scene {
     const adjustedX = (pointer.x / zoom) + scrollX;
     const adjustedY = (pointer.y / zoom) + scrollY;
   
+    console.log(`Pointer: (${pointer.x}, ${pointer.y}), Adjusted: (${adjustedX}, ${adjustedY})`);
+  
     // If joystick exists, update its position
     if (this.joystick) {
       this.joystick.setPosition(adjustedX, adjustedY);
@@ -92,7 +94,6 @@ class Waver extends Phaser.Scene {
       });
     }
   }
-
   showVirtualJoystick() {
     if (this.joystick) {
       this.joystick.base.setAlpha(1); // Optional: make it visible if needed
@@ -185,7 +186,7 @@ class Waver extends Phaser.Scene {
     this.acceleration = 0.1; // Reduced acceleration for smoother speed up
     this.deceleration = 0.02; // Reduced deceleration for smoother slow down
     this.backgroundSpeed = 3;
-    this.cameraZoom = 1.2;
+    this.cameraZoom = 1;
     this.cameraRotationFactor = 0.012;
     this.spaceshipBoundsPadding = 50;
     this.waveDetectionRadius = 150; // Radius to detect wave interaction
