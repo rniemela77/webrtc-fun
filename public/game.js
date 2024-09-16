@@ -1,4 +1,6 @@
 import Wave from "./wave.js";
+import { updateSpaceshipPosition, updateVirtualJoystickMovement } from "./movement.js";
+
 class Waver extends Phaser.Scene {
   constructor() {
     super({ key: "Racer" });
@@ -29,9 +31,9 @@ class Waver extends Phaser.Scene {
     this.updateWaves();
     this.checkSpaceshipWaveInteraction();
     this.updateCamera();
-    this.updateVirtualJoystickMovement();
+    updateVirtualJoystickMovement(this.joystick, this.spaceshipVelocity, this.maxSpeed);
     this.checkSpaceshipWaveInteraction();
-    this.updateSpaceshipPosition();
+    updateSpaceshipPosition(this.spaceship, this.spaceshipVelocity, this.game.loop.delta, this.spaceshipBoundsPadding, this.scale.width);
     this.drawVelocityLine();
   }
 
@@ -94,33 +96,6 @@ class Waver extends Phaser.Scene {
       this.joystick.base.setAlpha(0); // Optional: make it invisible if needed
       this.joystick.thumb.setAlpha(0); // Optional: make it invisible if needed
     }
-  }
-
-  updateVirtualJoystickMovement() {
-    if (!this.joystick || !this.joystick.force) return;
-
-    const sensitivity = 0.01;
-    const velocity = new Phaser.Math.Vector2(
-      this.joystick.forceX,
-      this.joystick.forceY
-    );
-
-    if (velocity.length() > 0) {
-      velocity
-        .normalize()
-        .scale(this.joystick.force * this.maxSpeed * sensitivity);
-      this.spaceshipVelocity.lerp(velocity, 0.1); // Smooth transition
-    } else {
-      this.spaceshipVelocity.scale(0.9); // Gradual stop
-    }
-
-    const maxVelocity = 100;
-    this.spaceshipVelocity.x = Phaser.Math.Clamp(
-      this.spaceshipVelocity.x,
-      -maxVelocity,
-      maxVelocity
-    );
-    this.spaceshipVelocity.y = 0; // Y velocity is always 0
   }
 
   updateCamera() {
@@ -226,16 +201,6 @@ class Waver extends Phaser.Scene {
 
   updateBackground() {
     this.background.tilePositionY -= this.backgroundSpeed;
-  }
-
-  updateSpaceshipPosition() {
-    this.spaceship.x += (this.spaceshipVelocity.x * this.game.loop.delta) / 100;
-
-    this.spaceship.x = Phaser.Math.Clamp(
-      this.spaceship.x,
-      this.spaceshipBoundsPadding,
-      this.scale.width - this.spaceshipBoundsPadding
-    );
   }
 }
 
