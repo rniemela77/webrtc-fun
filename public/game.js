@@ -63,16 +63,25 @@ class Waver extends Phaser.Scene {
   }
 
   createVirtualJoystick(pointer) {
+    // Get the camera's zoom level and scroll position
+    const camera = this.cameras.main;
+    const zoom = camera.zoom;
+    const scrollX = camera.scrollX;
+    const scrollY = camera.scrollY;
+  
+    // Adjust the pointer's position based on the camera's zoom and scroll
+    const adjustedX = (pointer.x / zoom) + scrollX;
+    const adjustedY = (pointer.y / zoom) + scrollY;
+  
     // If joystick exists, update its position
     if (this.joystick) {
-      this.joystick.setPosition(pointer.x, pointer.y);
+      this.joystick.setPosition(adjustedX, adjustedY);
       this.showVirtualJoystick();
     } else {
       // Create joystick
       this.joystick = this.plugins.get("rexvirtualjoystickplugin").add(this, {
-        // where on the screen it is seen
-        x: pointer.x,
-        y: pointer.y,
+        x: adjustedX,
+        y: adjustedY,
         radius: 50,
         deadzone: 20,
         base: this.add.circle(0, 0, 50, 0x888888),
