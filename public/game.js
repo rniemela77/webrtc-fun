@@ -21,7 +21,7 @@ class Waver extends Phaser.Scene {
     this.setupCamera();
     this.input.on("pointerdown", this.createVirtualJoystick, this);
     this.generateWaves();
-    }
+  }
 
   update() {
     this.updateBackground();
@@ -31,7 +31,32 @@ class Waver extends Phaser.Scene {
     this.updateVirtualJoystickMovement();
     this.checkSpaceshipWaveInteraction();
     this.updateSpaceshipPosition();
+    this.drawVelocityLine();
+  }
 
+  drawVelocityLine() {
+    this.graphics?.clear();
+
+    if (!this.pointer.isDown) {
+      return
+    }
+
+    // Start coordinates (spaceship's current position)
+    const startX = this.spaceship.x;
+    const startY = this.spaceship.y;
+
+    // End coordinates based on velocity
+    const endX = startX + this.spaceshipVelocity.x * 10; // Adjust the multiplier as needed
+    const endY = startY + this.spaceshipVelocity.y * 10; // Adjust the multiplier as needed
+
+    // Draw the line
+    this.graphics = this.add.graphics();
+    this.graphics.lineStyle(2, 0xff0000);
+    this.graphics.beginPath();
+    this.graphics.moveTo(startX, startY);
+    this.graphics.lineTo(endX, endY);
+    this.graphics.closePath();
+    this.graphics.strokePath();
   }
 
   createVirtualJoystick(pointer) {
@@ -61,6 +86,7 @@ class Waver extends Phaser.Scene {
       this.joystick.thumb.setAlpha(0); // Optional: make it invisible if needed
     }
   }
+
   updateVirtualJoystickMovement() {
     if (!this.joystick || !this.joystick.force) return;
 
@@ -166,7 +192,7 @@ class Waver extends Phaser.Scene {
   initializeVariables() {
     this.pointer = this.input.activePointer;
     this.spaceshipVelocity = new Phaser.Math.Vector2(0, 0);
-    this.maxSpeed = 200; // Adjust as needed  
+    this.maxSpeed = 200; // Adjust as needed
     this.spaceshipSpeed = 0;
     this.maxSpeed = 25;
     this.acceleration = 0.1; // Reduced acceleration for smoother speed up
@@ -200,10 +226,8 @@ class Waver extends Phaser.Scene {
   }
 
   updateSpaceshipPosition() {
-    this.spaceship.x +=
-      (this.spaceshipVelocity.x * this.game.loop.delta) / 1000;
-    this.spaceship.y +=
-      (this.spaceshipVelocity.y * this.game.loop.delta) / 1000;
+    this.spaceship.x += (this.spaceshipVelocity.x * this.game.loop.delta) / 100;
+    this.spaceship.y += (this.spaceshipVelocity.y * this.game.loop.delta) / 100;
 
     this.spaceship.x = Phaser.Math.Clamp(
       this.spaceship.x,
