@@ -38,7 +38,7 @@ class Waver extends Phaser.Scene {
     this.graphics?.clear();
 
     if (!this.pointer.isDown) {
-      return
+      return;
     }
 
     // Start coordinates (spaceship's current position)
@@ -47,7 +47,7 @@ class Waver extends Phaser.Scene {
 
     // End coordinates based on velocity
     const endX = startX + this.spaceshipVelocity.x * 10; // Adjust the multiplier as needed
-    const endY = startY + this.spaceshipVelocity.y * 10; // Adjust the multiplier as needed
+    const endY = startY; // Y position remains constant
 
     // Draw the line
     this.graphics = this.add.graphics();
@@ -111,11 +111,7 @@ class Waver extends Phaser.Scene {
       -maxVelocity,
       maxVelocity
     );
-    this.spaceshipVelocity.y = Phaser.Math.Clamp(
-      this.spaceshipVelocity.y,
-      -maxVelocity,
-      maxVelocity
-    );
+    this.spaceshipVelocity.y = 0; // Y velocity is always 0
   }
 
   updateCamera() {
@@ -143,11 +139,10 @@ class Waver extends Phaser.Scene {
         const scaledForce =
           repellingForce * (1 - distance / this.waveDetectionRadius);
         const forceX = Math.cos(angle) * scaledForce;
-        const forceY = Math.sin(angle) * scaledForce;
+        const forceY = 0; // No force applied on Y axis
 
         // Apply the force gradually using the damping factor
         spaceship.x += forceX * (damping * 5);
-        spaceship.y -= forceY * damping;
       }
     });
   }
@@ -227,17 +222,11 @@ class Waver extends Phaser.Scene {
 
   updateSpaceshipPosition() {
     this.spaceship.x += (this.spaceshipVelocity.x * this.game.loop.delta) / 100;
-    this.spaceship.y += (this.spaceshipVelocity.y * this.game.loop.delta) / 100;
 
     this.spaceship.x = Phaser.Math.Clamp(
       this.spaceship.x,
       this.spaceshipBoundsPadding,
       this.scale.width - this.spaceshipBoundsPadding
-    );
-    this.spaceship.y = Phaser.Math.Clamp(
-      this.spaceship.y,
-      this.spaceshipBoundsPadding,
-      this.scale.height - this.spaceshipBoundsPadding
     );
   }
 }
