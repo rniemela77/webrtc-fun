@@ -24,8 +24,6 @@ class Waver extends Phaser.Scene {
     this.updateBackground();
     this.updateWaves();
     this.checkSpaceshipWaveInteraction();
-    this.updateCamera();
-    this.checkSpaceshipWaveInteraction();
     updateSpaceshipPosition(
       this.spaceship,
       this.spaceshipVelocity,
@@ -61,7 +59,7 @@ class Waver extends Phaser.Scene {
     this.graphics.strokePath();
   }
 
-  createVirtualJoystick(pointer) {
+  createVirtualJoystick() {
     // when user clicks on the screen
     this.input.on("pointerdown", (pointer) => {
       // Convert the pointer position from screen space to world space
@@ -81,18 +79,6 @@ class Waver extends Phaser.Scene {
     this.input.on("pointermove", (pointer) => {
       if (!this.joystick) return;
       if (!pointer.isDown) return;
-      if (this.accelerationLine) this.accelerationLine.clear();
-
-      const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-
-      // create acceleration line from joystick to pointer
-      this.accelerationLine = this.add.graphics();
-      this.accelerationLine.lineStyle(2, 0xff0000);
-      this.accelerationLine.beginPath();
-      this.accelerationLine.moveTo(this.joystick.x, this.joystick.y);
-      this.accelerationLine.lineTo(worldPoint.x, worldPoint.y);
-      this.accelerationLine.closePath();
-      this.accelerationLine.strokePath();
     });
 
     // when user releases the pointer
@@ -103,12 +89,31 @@ class Waver extends Phaser.Scene {
       this.joystick.destroy();
       this.joystick = null;
     });
-  }
 
-  updateCamera() {
-    this.cameras.main.setRotation(
-      this.spaceshipSpeed * this.cameraRotationFactor
-    );
+    // on scene update
+    this.events.on("update", () => {
+      if (!this.joystick) return;
+      if (!this.pointer.isDown) return;
+      if (this.pointer.isDown) {
+        if (this.accelerationLine) this.accelerationLine.clear();
+  
+        const worldPoint = this.cameras.main.getWorldPoint(this.pointer.x, this.pointer.y);
+  
+        // create acceleration line from joystick to pointer
+        this.accelerationLine = this.add.graphics();
+        this.accelerationLine.lineStyle(2, 0xff0000);
+        this.accelerationLine.beginPath();
+        this.accelerationLine.moveTo(this.joystick.x, this.joystick.y);
+        this.accelerationLine.lineTo(worldPoint.x, worldPoint.y);
+        this.accelerationLine.closePath();
+        this.accelerationLine.strokePath();
+      }
+
+      // find width of accelerationLine
+      const width = this.accelerationLine?.geom?.line?.width;
+
+      
+    });
   }
 
   checkSpaceshipWaveInteraction() {
@@ -180,12 +185,9 @@ class Waver extends Phaser.Scene {
     this.spaceshipVelocity = new Phaser.Math.Vector2(0, 0);
     this.spaceshipSpeed = 0;
     this.maxSpeed = 2;
-    this.acceleration = 0.1; // Reduced acceleration for smoother speed up
-    this.deceleration = 0.02; // Reduced deceleration for smoother slow down
     this.backgroundSpeed = 3;
     this.cameraZoom = 1.5;
     this.cameraRotationFactor = 0.012;
-    this.spaceshipBoundsPadding = 50;
     this.waveDetectionRadius = 150; // Radius to detect wave interaction
     this.repellingForce = 3; // Force to repel the spaceship
     this.repellingDamping = 0.5; // Damping factor for smooth repelling

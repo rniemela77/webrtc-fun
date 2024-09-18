@@ -1,5 +1,7 @@
 export function updateSpaceshipPosition(spaceship, spaceshipVelocity, gameLoopDelta, spaceshipBoundsPadding, scaleWidth) {
-  spaceship.x += (spaceshipVelocity.x * gameLoopDelta) / 100;
+  return;
+  
+    spaceship.x += (spaceshipVelocity.x * gameLoopDelta) / 100;
 
   spaceship.x = Phaser.Math.Clamp(
 	spaceship.x,
