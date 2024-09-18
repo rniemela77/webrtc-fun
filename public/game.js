@@ -1,5 +1,5 @@
 import Wave from "./wave.js";
-import { updateSpaceshipPosition, updateVirtualJoystickMovement } from "./movement.js";
+import { updateSpaceshipPosition } from "./movement.js";
 
 class Waver extends Phaser.Scene {
   constructor() {
@@ -9,11 +9,6 @@ class Waver extends Phaser.Scene {
 
   preload() {
     this.loadImages();
-    this.load.plugin(
-      "rexvirtualjoystickplugin",
-      "../node_modules/phaser3-rex-plugins/plugins/virtualjoystick.js",
-      true
-    );
   }
 
   create() {
@@ -21,9 +16,8 @@ class Waver extends Phaser.Scene {
     this.createSpaceship();
     this.initializeVariables();
     this.setupCamera();
-    this.input.on("pointerdown", this.createVirtualJoystick, this);
-    this.input.on("pointerup", this.hideVirtualJoystick, this);
     this.generateWaves();
+    this.createVirtualJoystick();
   }
 
   update() {
@@ -31,9 +25,14 @@ class Waver extends Phaser.Scene {
     this.updateWaves();
     this.checkSpaceshipWaveInteraction();
     this.updateCamera();
-    updateVirtualJoystickMovement(this.joystick, this.spaceshipVelocity, this.maxSpeed);
     this.checkSpaceshipWaveInteraction();
-    updateSpaceshipPosition(this.spaceship, this.spaceshipVelocity, this.game.loop.delta, this.spaceshipBoundsPadding, this.scale.width);
+    updateSpaceshipPosition(
+      this.spaceship,
+      this.spaceshipVelocity,
+      this.game.loop.delta,
+      this.spaceshipBoundsPadding,
+      this.scale.width
+    );
     this.drawVelocityLine();
   }
 
@@ -63,47 +62,47 @@ class Waver extends Phaser.Scene {
   }
 
   createVirtualJoystick(pointer) {
-    // Get the camera's zoom level and scroll position
-    const camera = this.cameras.main;
-    const zoom = camera.zoom;
-    const scrollX = camera.scrollX;
-    const scrollY = camera.scrollY;
-  
-    // Adjust the pointer's position based on the camera's zoom and scroll
-    const adjustedX = (pointer.x / zoom) + scrollX;
-    const adjustedY = (pointer.y / zoom) + scrollY;
-  
-    // If joystick exists, update its position
-    if (this.joystick) {
-      this.joystick.setPosition(adjustedX, adjustedY);
-      this.showVirtualJoystick();
-    } else {
-      // Create joystick
-      this.joystick = this.plugins.get("rexvirtualjoystickplugin").add(this, {
-        x: adjustedX,
-        y: adjustedY,
-        radius: 50,
-        deadzone: 20,
-        base: this.add.circle(0, 0, 50, 0x888888),
-        thumb: this.add.circle(0, 0, 20, 0xcccccc),
-        dir: "8dir", // 'up&down', 'left&right', '4dir', '8dir'
-        forceMin: 5, // Minimum force of stick when dragging. 0 to 1
-        enable: true, // Enable the joystick
-      });
-    }
-  }
-  showVirtualJoystick() {
-    if (this.joystick) {
-      this.joystick.base.setAlpha(1); // Optional: make it visible if needed
-      this.joystick.thumb.setAlpha(1); // Optional: make it visible if needed
-    }
-  }
+    // when user clicks on the screen
+    this.input.on("pointerdown", (pointer) => {
+      // Convert the pointer position from screen space to world space
+      const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
 
-  hideVirtualJoystick() {
-    if (this.joystick) {
-      this.joystick.base.setAlpha(0); // Optional: make it invisible if needed
-      this.joystick.thumb.setAlpha(0); // Optional: make it invisible if needed
-    }
+      // Create a square
+      this.joystick = this.add.rectangle(
+        worldPoint.x,
+        worldPoint.y,
+        10,
+        10,
+        0xff0000
+      );
+    });
+
+    // when user moves the pointer
+    this.input.on("pointermove", (pointer) => {
+      if (!this.joystick) return;
+      if (!pointer.isDown) return;
+      if (this.accelerationLine) this.accelerationLine.clear();
+
+      const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+
+      // create acceleration line from joystick to pointer
+      this.accelerationLine = this.add.graphics();
+      this.accelerationLine.lineStyle(2, 0xff0000);
+      this.accelerationLine.beginPath();
+      this.accelerationLine.moveTo(this.joystick.x, this.joystick.y);
+      this.accelerationLine.lineTo(worldPoint.x, worldPoint.y);
+      this.accelerationLine.closePath();
+      this.accelerationLine.strokePath();
+    });
+
+    // when user releases the pointer
+    this.input.on("pointerup", (pointer) => {
+      if (!this.joystick) return;
+      if (this.accelerationLine) this.accelerationLine.clear();
+
+      this.joystick.destroy();
+      this.joystick = null;
+    });
   }
 
   updateCamera() {
@@ -184,7 +183,7 @@ class Waver extends Phaser.Scene {
     this.acceleration = 0.1; // Reduced acceleration for smoother speed up
     this.deceleration = 0.02; // Reduced deceleration for smoother slow down
     this.backgroundSpeed = 3;
-    this.cameraZoom = 1;
+    this.cameraZoom = 1.5;
     this.cameraRotationFactor = 0.012;
     this.spaceshipBoundsPadding = 50;
     this.waveDetectionRadius = 150; // Radius to detect wave interaction
