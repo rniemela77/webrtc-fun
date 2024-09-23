@@ -40,11 +40,11 @@ export default class Wave {
 
     // every 0.5s
     this.scene.time.addEvent({
-      delay: 80,
+      delay: 50,
       callback: () => {
         // create a temporary wave to fill the gap
         const extraWave = this.scene.add.graphics();
-        extraWave.lineStyle(2, 0x0000ff, 1);
+        extraWave.lineStyle(1, 0x0000ff, 1);
         extraWave.beginPath();
         extraWave.moveTo(this.waveStartX, this.waveStartY);
         extraWave.lineTo(this.waveEndX, this.waveEndY);
@@ -55,7 +55,7 @@ export default class Wave {
         this.scene.tweens.add({
           targets: extraWave,
           alpha: 0,
-          duration: 400,
+          duration: 100,
           onComplete: () => {
             extraWave.destroy();
           },
