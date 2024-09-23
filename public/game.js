@@ -1,5 +1,5 @@
 import Wave from "./wave.js";
-import { updateSpaceshipPosition } from "./movement.js";
+import { updateSpaceshipPosition, createWakeEffect } from "./movement.js";
 
 class Waver extends Phaser.Scene {
   constructor() {
@@ -18,6 +18,7 @@ class Waver extends Phaser.Scene {
     this.initializeVariables();
     this.setupCamera();
     this.generateWaves();
+    createWakeEffect(this, this.spaceship);
   }
 
   update() {
@@ -30,9 +31,9 @@ class Waver extends Phaser.Scene {
 
   createSpaceship() {
     this.spaceship = this.add
-      .sprite(this.scale.width / 2, this.scale.height - 50, "spaceship")
+      .sprite(this.scale.width / 2, this.scale.height * 0.8, "spaceship")
       .setOrigin(0.5, 0.5)
-      .setScale(0.5)
+      .setScale(0.2)
       .setDepth(1);
   }
 
