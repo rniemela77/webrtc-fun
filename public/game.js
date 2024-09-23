@@ -8,7 +8,8 @@ class Waver extends Phaser.Scene {
   }
 
   preload() {
-    this.loadImages();
+    this.load.image("background", "path/to/background.png");
+    this.load.image("spaceship", "path/to/spaceship.png");
   }
 
   create() {
@@ -17,38 +18,34 @@ class Waver extends Phaser.Scene {
     this.initializeVariables();
     this.setupCamera();
     this.generateWaves();
-    this.createVirtualJoystick();
   }
 
   update() {
     this.updateBackground();
     this.updateWaves();
     this.checkSpaceshipWaveInteraction();
-    updateSpaceshipPosition(
-      this.spaceship,
-      this.spaceshipVelocity,
-      this.game.loop.delta,
-      this.spaceshipBoundsPadding,
-      this.scale.width
-    );
-    this.drawVelocityLine();
+    this.updateVelocityLine();
+    updateSpaceshipPosition(this);
   }
 
-  drawVelocityLine() {
-    this.graphics?.clear();
+  createSpaceship() {
+    this.spaceship = this.add
+      .sprite(this.scale.width / 2, this.scale.height - 50, "spaceship")
+      .setOrigin(0.5, 0.5)
+      .setScale(0.5)
+      .setDepth(1);
+  }
 
-    if (!this.pointer.isDown) {
-      return;
-    }
-
+  updateVelocityLine() {
     // Start coordinates (spaceship's current position)
     const startX = this.spaceship.x;
     const startY = this.spaceship.y;
 
     // End coordinates based on velocity
-    const endX = startX + this.spaceshipVelocity.x * 10; // Adjust the multiplier as needed
+    const endX = startX + this.spaceshipVelocity.x * 40; // Adjust the multiplier as needed
     const endY = startY; // Y position remains constant
 
+    this.graphics?.clear();
     // Draw the line
     this.graphics = this.add.graphics();
     this.graphics.lineStyle(2, 0xff0000);
@@ -57,63 +54,6 @@ class Waver extends Phaser.Scene {
     this.graphics.lineTo(endX, endY);
     this.graphics.closePath();
     this.graphics.strokePath();
-  }
-
-  createVirtualJoystick() {
-    // when user clicks on the screen
-    this.input.on("pointerdown", (pointer) => {
-      // Convert the pointer position from screen space to world space
-      const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-
-      // Create a square
-      this.joystick = this.add.rectangle(
-        worldPoint.x,
-        worldPoint.y,
-        10,
-        10,
-        0xff0000
-      );
-    });
-
-    // when user moves the pointer
-    this.input.on("pointermove", (pointer) => {
-      if (!this.joystick) return;
-      if (!pointer.isDown) return;
-    });
-
-    // when user releases the pointer
-    this.input.on("pointerup", (pointer) => {
-      if (!this.joystick) return;
-      if (this.accelerationLine) this.accelerationLine.clear();
-
-      this.joystick.destroy();
-      this.joystick = null;
-    });
-
-    // on scene update
-    this.events.on("update", () => {
-      if (!this.joystick) return;
-      if (!this.pointer.isDown) return;
-      if (this.pointer.isDown) {
-        if (this.accelerationLine) this.accelerationLine.clear();
-  
-        const worldPoint = this.cameras.main.getWorldPoint(this.pointer.x, this.pointer.y);
-  
-        // create acceleration line from joystick to pointer
-        this.accelerationLine = this.add.graphics();
-        this.accelerationLine.lineStyle(2, 0xff0000);
-        this.accelerationLine.beginPath();
-        this.accelerationLine.moveTo(this.joystick.x, this.joystick.y);
-        this.accelerationLine.lineTo(worldPoint.x, worldPoint.y);
-        this.accelerationLine.closePath();
-        this.accelerationLine.strokePath();
-      }
-
-      // find width of accelerationLine
-      const width = this.accelerationLine?.geom?.line?.width;
-
-      
-    });
   }
 
   checkSpaceshipWaveInteraction() {
@@ -156,14 +96,8 @@ class Waver extends Phaser.Scene {
       loop: true,
     });
   }
-
   updateWaves() {
     this.waves.forEach((wave) => wave.update());
-  }
-
-  loadImages() {
-    this.load.image("background", "path/to/background.png");
-    this.load.image("spaceship", "path/to/spaceship.png");
   }
 
   createBackground() {
@@ -172,24 +106,20 @@ class Waver extends Phaser.Scene {
       .setTint(0x252325)
       .setOrigin(0, 0);
   }
-
-  createSpaceship() {
-    this.spaceship = this.add
-      .sprite(this.scale.width / 2, this.scale.height - 50, "spaceship")
-      .setOrigin(0.5, 0.5)
-      .setDepth(1);
+  updateBackground() {
+    this.background.tilePositionY -= this.backgroundSpeed;
   }
 
   initializeVariables() {
-    this.pointer = this.input.activePointer;
     this.spaceshipVelocity = new Phaser.Math.Vector2(0, 0);
-    this.spaceshipSpeed = 0;
+    this.spaceshipSpeed = 0.1;
     this.maxSpeed = 2;
     this.backgroundSpeed = 3;
     this.cameraZoom = 1.5;
-    this.cameraRotationFactor = 0.012;
+    this.cameraRotationFactor = 0.00012;
+
     this.waveDetectionRadius = 150; // Radius to detect wave interaction
-    this.repellingForce = 3; // Force to repel the spaceship
+    this.repellingForce = 6; // Force to repel the spaceship
     this.repellingDamping = 0.5; // Damping factor for smooth repelling
   }
 
@@ -200,17 +130,6 @@ class Waver extends Phaser.Scene {
     this.cameras.main.setZoom(this.cameraZoom);
   }
 
-  setupInput() {
-    this.cursors = this.input.keyboard.createCursorKeys();
-
-    this.input.on("pointermove", (pointer) => {
-      this.pointer = pointer;
-    });
-  }
-
-  updateBackground() {
-    this.background.tilePositionY -= this.backgroundSpeed;
-  }
 }
 
 const config = {
