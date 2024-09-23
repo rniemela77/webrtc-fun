@@ -5,17 +5,32 @@ export default class Wave {
     this.waveStartY = 0;
     this.waveEndX = endX;
     this.waveEndY = scene.scale.height;
-    this.waveSpeed = Math.random() * 3 + 1;
+    this.waveSpeed = this.generateWaveSpeed();
 
+    this.adjustWavePosition(startX, endX);
+    this.createWaveGraphics();
+  }
+
+  generateWaveSpeed() {
+    // Generates a random speed for the wave between 1 and 4
+    return Math.random() * 3 + 1;
+  }
+
+  adjustWavePosition(startX, endX) {
+    // Adjusts the wave position based on the start and end X coordinates
+    const sceneWidth = this.scene.scale.width;
     if (startX > endX) {
-      this.waveStartX += scene.scale.width;
-      this.waveEndX += scene.scale.width;
+      this.waveStartX += sceneWidth;
+      this.waveEndX += sceneWidth;
     } else {
-      this.waveStartX -= scene.scale.width;
-      this.waveEndX -= scene.scale.width;
+      this.waveStartX -= sceneWidth;
+      this.waveEndX -= sceneWidth;
     }
+  }
 
-    this.wave = scene.add.graphics();
+  createWaveGraphics() {
+    // Creates the wave graphics and adds it to the scene
+    this.wave = this.scene.add.graphics();
     this.wave.lineStyle(2, 0xffffff, 1);
     this.wave.beginPath();
     this.wave.moveTo(this.waveStartX, this.waveStartY);
@@ -25,6 +40,7 @@ export default class Wave {
   }
 
   update() {
+    // Updates the wave position based on its speed and direction
     const direction = this.waveStartX < this.waveEndX ? 1 : -1;
     this.wave.x += this.waveSpeed * direction;
     this.waveStartX += this.waveSpeed * direction;
@@ -32,6 +48,7 @@ export default class Wave {
   }
 
   getDistanceToPoint(x, y) {
+    // Calculates the distance from a point (x, y) to the wave
     const { waveStartX, waveStartY, waveEndX, waveEndY } = this;
     const A = x - waveStartX;
     const B = y - waveStartY;
