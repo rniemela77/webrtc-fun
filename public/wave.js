@@ -31,12 +31,38 @@ export default class Wave {
   createWaveGraphics() {
     // Creates the wave graphics and adds it to the scene
     this.wave = this.scene.add.graphics();
-    this.wave.lineStyle(2, 0xffffff, 1);
+    this.wave.lineStyle(2, 0x5555ff, 1);
     this.wave.beginPath();
     this.wave.moveTo(this.waveStartX, this.waveStartY);
     this.wave.lineTo(this.waveEndX, this.waveEndY);
     this.wave.closePath();
     this.wave.strokePath();
+
+    // every 0.5s
+    this.scene.time.addEvent({
+      delay: 80,
+      callback: () => {
+        // create a temporary wave to fill the gap
+        const extraWave = this.scene.add.graphics();
+        extraWave.lineStyle(2, 0x0000ff, 1);
+        extraWave.beginPath();
+        extraWave.moveTo(this.waveStartX, this.waveStartY);
+        extraWave.lineTo(this.waveEndX, this.waveEndY);
+        extraWave.closePath();
+        extraWave.strokePath();
+
+        // fade out
+        this.scene.tweens.add({
+          targets: extraWave,
+          alpha: 0,
+          duration: 400,
+          onComplete: () => {
+            extraWave.destroy();
+          },
+        });
+      },
+      loop: true,
+    });
   }
 
   update() {
