@@ -115,13 +115,15 @@ class Waver extends Phaser.Scene {
     this.spaceshipVelocity = new Phaser.Math.Vector2(0, 0);
     this.spaceshipSpeed = 0.1;
     this.maxSpeed = 2;
+    this.spaceshipDrag = 0.95;
+
     this.backgroundSpeed = 3;
     this.cameraZoom = 1.5;
     this.cameraRotationFactor = 0.00012;
 
-    this.waveDetectionRadius = 150; // Radius to detect wave interaction
-    this.repellingForce = 6; // Force to repel the spaceship
-    this.repellingDamping = 0.5; // Damping factor for smooth repelling
+    this.waveDetectionRadius = 50; // Radius: lower value means more sensitive detection
+    this.repellingForce = 5; // Force: higher value means stronger repelling force
+    this.repellingDamping = 0.3; // Damping: lower value means more gradual force application
   }
 
   setupCamera() {

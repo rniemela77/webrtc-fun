@@ -1,5 +1,5 @@
 export function updateSpaceshipPosition(scene) {
-  const { spaceship, spaceshipVelocity, input, spaceshipSpeed } = scene;
+  const { spaceship, spaceshipVelocity, input, spaceshipSpeed, spaceshipDrag } = scene;
 
   // keyboard movement
   if (input.keyboard.addKey("a").isDown) {
@@ -19,12 +19,13 @@ export function updateSpaceshipPosition(scene) {
     }
   }
 
+  spaceshipVelocity.x *= spaceshipDrag; 
+
   // Update spaceship position
   spaceship.x += spaceshipVelocity.x;
 }
 
 export function createWakeEffect(scene, spaceship) {
-  // every 0.5s
   scene.time.addEvent({
     delay: 100,
     callback: () => {
