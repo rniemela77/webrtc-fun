@@ -19,6 +19,64 @@ class Waver extends Phaser.Scene {
     this.setupCamera();
     this.generateWaves();
     createWakeEffect(this, this.spaceship);
+    // create rocks
+    this.createObstacle();
+    this.createGoal();
+    // wait 1s
+    this.time.addEvent({
+      delay: 1000,
+      callback: () => {
+        this.createGoal();
+      },
+      callbackScope: this,
+    });
+  }
+
+  createGoal() {
+    const goal = this.add.rectangle(
+      Phaser.Math.Between(0, this.scale.width),
+      -100,
+      50,
+      50,
+      0x338833
+    );
+
+    // on scene update
+    this.events.on("update", () => {
+      goal.y += 2;
+      if (goal.y > this.scale.height + goal.height) {
+        goal.y = 0 - goal.height;
+        goal.x = Phaser.Math.Between(0, this.scale.width);
+      }
+
+      if (
+        Phaser.Geom.Intersects.RectangleToRectangle(
+          goal.getBounds(),
+          this.spaceship.getBounds()
+        )
+      ) {
+        goal.y = 0 - goal.height;
+      }
+    });
+  }
+
+  createObstacle() {
+    const obstacle = this.add.rectangle(
+      this.scale.width / 3,
+      -100,
+      100,
+      250,
+      0x773333
+    );
+
+    // on scene update
+    this.events.on("update", () => {
+      obstacle.y += 5;
+      if (obstacle.y > this.scale.height + obstacle.height) {
+        obstacle.y = 0 - obstacle.height;
+        obstacle.x = Phaser.Math.Between(0, this.scale.width);
+      }
+    });
   }
 
   update() {
@@ -132,7 +190,6 @@ class Waver extends Phaser.Scene {
     this.cameras.main.startFollow(this.spaceship, true, 0.1, 0.1);
     this.cameras.main.setZoom(this.cameraZoom);
   }
-
 }
 
 const config = {

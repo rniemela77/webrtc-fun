@@ -1,5 +1,6 @@
 export function updateSpaceshipPosition(scene) {
-  const { spaceship, spaceshipVelocity, input, spaceshipSpeed, spaceshipDrag } = scene;
+  const { spaceship, spaceshipVelocity, input, spaceshipSpeed, spaceshipDrag } =
+    scene;
 
   // keyboard movement
   if (input.keyboard.addKey("a").isDown) {
@@ -19,10 +20,18 @@ export function updateSpaceshipPosition(scene) {
     }
   }
 
-  spaceshipVelocity.x *= spaceshipDrag; 
+  spaceshipVelocity.x *= spaceshipDrag;
 
   // Update spaceship position
   spaceship.x += spaceshipVelocity.x;
+
+  // if the spaceship x velocity is greater than 0.1, rotate the spaceship
+  if (Math.abs(spaceshipVelocity.x) > 0.1) {
+    spaceship.angle = spaceshipVelocity.x * 5;
+  }
+
+  // rotate camera somewhat
+  scene.cameras.main.rotation = spaceshipVelocity.x * -0.01;
 }
 
 export function createWakeEffect(scene, spaceship) {
@@ -64,6 +73,6 @@ export function createWakeEffect(scene, spaceship) {
         },
       });
     },
-    loop: true
+    loop: true,
   });
 }
