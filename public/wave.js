@@ -6,14 +6,38 @@ export default class Wave {
     this.waveEndX = endX;
     this.waveEndY = scene.scale.height;
     this.waveSpeed = this.generateWaveSpeed();
+    this.waveForce = this.calculateWaveForce();
+    this.detectionRadius = this.calculateDetectionRadius();
+    this.repellingForce = this.calculateRepellingForce();
+    this.damping = this.calculateDamping();
 
     this.adjustWavePosition(startX, endX);
     this.createWaveGraphics();
   }
 
+  calculateDamping() {
+    // Calculates the damping based on the wave length
+    return 0.3 + this.waveSpeed * 0.1;
+  }
+
+  calculateRepellingForce() {
+    // Calculates the repelling force based on the wave speed
+    return this.waveSpeed * 2;
+  }
+
+  calculateDetectionRadius() {
+    // Calculates the detection radius based on the wave length
+    return 50 + this.waveSpeed * 10;
+  }
+
   generateWaveSpeed() {
     // Generates a random speed for the wave between 1 and 4
-    return Math.random() * 3 + 1;
+    return Math.random() * 2 + 0.5;
+  }
+
+  calculateWaveForce() {
+    // Calculate the wave force based on the wave speed
+    return this.waveSpeed * 5; // Example: force is 10 times the speed
   }
 
   adjustWavePosition(startX, endX) {
@@ -44,7 +68,7 @@ export default class Wave {
       callback: () => {
         // create a temporary wave to fill the gap
         const extraWave = this.scene.add.graphics();
-        extraWave.lineStyle(1, 0x0000ff, 1);
+        extraWave.lineStyle(1, 0x0000ff, 0.5);
         extraWave.beginPath();
         extraWave.moveTo(this.waveStartX, this.waveStartY);
         extraWave.lineTo(this.waveEndX, this.waveEndY);
@@ -55,7 +79,7 @@ export default class Wave {
         this.scene.tweens.add({
           targets: extraWave,
           alpha: 0,
-          duration: 100,
+          duration: 300,
           onComplete: () => {
             extraWave.destroy();
           },
