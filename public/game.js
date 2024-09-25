@@ -19,9 +19,38 @@ class Waver extends Phaser.Scene {
     this.setupCamera();
     this.generateWaves();
     createWakeEffect(this, this.spaceship);
-    // create rocks
     this.createObstacle();
     this.createGoal();
+
+    //every 0.2s
+    this.time.addEvent({
+      delay: 200,
+      callback: () => {
+        return;
+        // shoot a bullet
+        const bullet = this.add.rectangle(
+          this.spaceship.x,
+          this.spaceship.y,
+          10,
+          10,
+          0x3333ff
+        );
+        bullet.velocity = new Phaser.Math.Vector2(0, -100);
+        this.physics.add.existing(bullet);
+        this.physics.world.enable(bullet);
+        bullet.body.setVelocity(bullet.velocity.x, bullet.velocity.y);
+      },
+      callbackScope: this,
+      loop: true,
+    });
+
+    this.time.addEvent({
+      delay: 1000,
+      callback: () => {
+        // this.createEnemy();
+      },
+    });
+
     // wait 1s
     this.time.addEvent({
       delay: 1000,
@@ -29,6 +58,34 @@ class Waver extends Phaser.Scene {
         this.createGoal();
       },
       callbackScope: this,
+    });
+  }
+
+  createEnemy() {
+    const enemy = this.add.rectangle(
+      Phaser.Math.Between(0, this.scale.width),
+      -100,
+      50,
+      50,
+      0x883333
+    );
+
+    // on scene update
+    this.events.on("update", () => {
+      enemy.y += 3;
+      if (enemy.y > this.scale.height + enemy.height) {
+        enemy.y = 0 - enemy.height;
+        enemy.x = Phaser.Math.Between(0, this.scale.width);
+      }
+
+      if (
+        Phaser.Geom.Intersects.RectangleToRectangle(
+          enemy.getBounds(),
+          this.spaceship.getBounds()
+        )
+      ) {
+        enemy.y = 0 - enemy.height;
+      }
     });
   }
 
@@ -169,10 +226,11 @@ class Waver extends Phaser.Scene {
   initializeVariables() {
     this.spaceshipVelocity = new Phaser.Math.Vector2(0, 0);
     this.spaceshipSpeed = 0.1;
-    this.maxSpeed = 2;
-    this.spaceshipDrag = 0.95;
+    this.maxSpeed = 1;
+    this.spaceshipDrag = 0.99;
+    this.spaceshipAcceleration = 0.5;
 
-    this.backgroundSpeed = 3;
+    this.backgroundSpeed = 2;
     this.cameraZoom = 1.5;
     this.cameraRotationFactor = 0.00012;
   }
@@ -193,7 +251,7 @@ const config = {
   parent: "phaser-example",
   physics: {
     default: "arcade",
-    arcade: { debug: true },
+    // arcade: { debug: true },
   },
   scene: Waver,
 };

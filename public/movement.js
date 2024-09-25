@@ -1,5 +1,5 @@
 export function updateSpaceshipPosition(scene) {
-  const { spaceship, spaceshipVelocity, input, spaceshipSpeed, spaceshipDrag } =
+  const { spaceship, spaceshipVelocity, input, spaceshipSpeed, spaceshipDrag, maxSpeed, spaceshipAcceleration } =
     scene;
 
   // keyboard movement
@@ -18,6 +18,13 @@ export function updateSpaceshipPosition(scene) {
     } else {
       spaceshipVelocity.x += spaceshipSpeed;
     }
+  }
+
+  // max speed
+  if (spaceshipVelocity.x > maxSpeed) {
+    spaceshipVelocity.x = maxSpeed;
+  } else if (spaceshipVelocity.x < -maxSpeed) {
+    spaceshipVelocity.x = -maxSpeed;
   }
 
   spaceshipVelocity.x *= spaceshipDrag;
