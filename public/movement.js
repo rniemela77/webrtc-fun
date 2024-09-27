@@ -1,5 +1,5 @@
 export function updateSpaceshipPosition(scene) {
-  const { spaceship, spaceshipVelocity, input, spaceshipSpeed, spaceshipDrag, maxSpeed, spaceshipAcceleration } =
+  const { spaceship, spaceshipVelocity, input, spaceshipSpeed, spaceshipDrag, maxSpeed } =
     scene;
 
   // keyboard movement
@@ -30,7 +30,7 @@ export function updateSpaceshipPosition(scene) {
   spaceshipVelocity.x *= spaceshipDrag;
 
   // Update spaceship position
-  spaceship.x += spaceshipVelocity.x;
+  spaceship.x += spaceshipVelocity.x * spaceshipAcceleration;
 
   // if the spaceship x velocity is greater than 0.1, rotate the spaceship
   if (Math.abs(spaceshipVelocity.x) > 0.1) {

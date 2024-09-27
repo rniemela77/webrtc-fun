@@ -228,7 +228,6 @@ class Waver extends Phaser.Scene {
     this.spaceshipSpeed = 0.1;
     this.maxSpeed = 1;
     this.spaceshipDrag = 0.99;
-    this.spaceshipAcceleration = 0.5;
 
     this.backgroundSpeed = 2;
     this.cameraZoom = 1.5;
