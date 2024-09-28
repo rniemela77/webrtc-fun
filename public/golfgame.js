@@ -17,7 +17,7 @@ class Golf extends Phaser.Scene {
     this.ball.body.setCollideWorldBounds(true);
 
     // add drag
-    this.ball.body.setDrag(0.5);
+    this.ball.body.setDrag(0.7);
     this.ball.body.setDamping(true); // Enable damping for drag to take effect
 
     this.ball.x = this.scale.width / 2;
@@ -84,14 +84,16 @@ class Golf extends Phaser.Scene {
       const x = Phaser.Math.Between(0, this.scale.width);
       const y = Phaser.Math.Between(0, this.scale.height);
 
+      const size = Math.random() > 0.5 ? 20 : 50;
+
       let obstacle;
 
       if (Math.random() > 0.5) {
-        obstacle = this.add.circle(x, y, 20, 0x00ff00);
+        obstacle = this.add.circle(x, y, size, 0x00ff00);
         this.physics.add.existing(obstacle);
-        obstacle.body.setCircle(20);
+        obstacle.body.setCircle(size);
       } else {
-        obstacle = this.add.rectangle(x, y, 50, 50, 0x00ff00);
+        obstacle = this.add.rectangle(x, y, size, size, 0x00ff00);
         this.physics.add.existing(obstacle);
       }
 
@@ -101,14 +103,13 @@ class Golf extends Phaser.Scene {
       if (Math.random() > 0.5) {
         obstacle.body.setImmovable(true);
         obstacle.fillColor = 0xff0000;
+        obstacle.body.mass = 100;
+      } else {
+        obstacle.body.setBounce(1, 1);
+        obstacle.body.setDrag(0.5);
+        obstacle.body.setDamping(true);
       }
-
-      // set weight of obstacle
-      obstacle.body.mass = 10;
-      obstacle.body.setBounce(1, 1);
-      obstacle.body.setDrag(0.5);
-      obstacle.body.setDamping(true);
-
+      
       this.physics.add.collider(this.ball, obstacle);
       this.physics.add.collider(this.obstacles, this.obstacles);
     }
