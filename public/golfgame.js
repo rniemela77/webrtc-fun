@@ -58,7 +58,7 @@ class Golf extends Phaser.Scene {
     this.events.on("update", () => {
       // if the ball is moving
       if (this.ballIsMoving) {
-        if (this.ball.body.speed < 20) {
+        if (this.ball.body.speed < 10) {
           this.ballIsMoving = false;
           this.switchBall();
         }
@@ -91,6 +91,12 @@ class Golf extends Phaser.Scene {
   switchBall() {
     const index = this.balls.indexOf(this.ball);
     this.ball = this.balls[index === 0 ? 1 : 0];
+
+    // color current ball
+    this.balls.forEach((ball) => {
+      ball.fillColor = 0xffffff;
+    });
+    this.ball.fillColor = 0xff0000;
   }
 
   handlePointerDown(pointer) {
@@ -169,10 +175,13 @@ class Golf extends Phaser.Scene {
   }
 
   drawLines(pointer) {
+    this.graphics.clear();
+
+    if (this.ballIsMoving) {
+      return;
+    }
     const LINE_COLOR = 0x5555ff;
     const EXPECTED_COLOR = 0xff0000;
-
-    this.graphics.clear();
 
     // pointer to ball line
     this.graphics.lineStyle(2, LINE_COLOR, 0.1);
