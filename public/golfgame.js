@@ -39,6 +39,7 @@ class Golf extends Phaser.Scene {
     this.balls = [];
     this.balls.push(this.createBall());
     this.balls.push(this.createBall());
+    this.balls.push(this.createBall());
 
     this.physics.add.collider(this.balls, this.balls);
 
@@ -109,7 +110,8 @@ class Golf extends Phaser.Scene {
 
   switchBall() {
     const index = this.balls.indexOf(this.ball);
-    this.ball = this.balls[index === 0 ? 1 : 0];
+    const nextIndex = (index + 1) % this.balls.length;
+    this.ball = this.balls[nextIndex];
 
     // color current ball
     this.balls.forEach((ball) => {
