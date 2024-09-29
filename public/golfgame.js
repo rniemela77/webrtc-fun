@@ -35,7 +35,14 @@ class Golf extends Phaser.Scene {
       )
       .setOrigin(0);
 
-    this.ball = this.createBall();
+    // this.ball = this.createBall();
+    this.balls = [];
+    this.balls.push(this.createBall());
+    this.balls.push(this.createBall());
+
+    this.physics.add.collider(this.balls, this.balls);
+
+    this.ball = this.balls[0];
 
     // on click
     this.input.on("pointerdown", this.handlePointerDown, this);
@@ -46,6 +53,17 @@ class Golf extends Phaser.Scene {
 
     // create graphics for drawing lines
     this.graphics = this.add.graphics();
+
+    // on update event
+    this.events.on("update", () => {
+      // if the ball is moving
+      if (this.ballIsMoving) {
+        if (this.ball.body.speed < 20) {
+          this.ballIsMoving = false;
+          this.switchBall();
+        }
+      }
+    });
   }
 
   createBall() {
@@ -64,13 +82,19 @@ class Golf extends Phaser.Scene {
     ball.body.setCollideWorldBounds(true);
 
     // add drag
-    ball.body.setDrag(0.7);
+    ball.body.setDrag(0.1);
     ball.body.setDamping(true); // Enable damping for drag to take effect
 
     return ball;
   }
 
+  switchBall() {
+    const index = this.balls.indexOf(this.ball);
+    this.ball = this.balls[index === 0 ? 1 : 0];
+  }
+
   handlePointerDown(pointer) {
+    this.ballIsMoving = true;
     const angle = Phaser.Math.Angle.Between(
       this.ball.x,
       this.ball.y,
