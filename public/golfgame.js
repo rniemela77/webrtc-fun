@@ -83,6 +83,34 @@ class Golf extends Phaser.Scene {
     this.physics.moveTo(this.ball, oppositeX, oppositeY, force); // Move the ball in the opposite direction
   }
 
+  createObstacle(x, y, size, color, isCircle, isImmovable) {
+    let obstacle;
+
+    if (isCircle) {
+      obstacle = this.add.circle(x, y, size, color);
+      this.physics.add.existing(obstacle);
+      obstacle.body.setCircle(size);
+    } else {
+      obstacle = this.add.rectangle(x, y, size, size, color);
+      this.physics.add.existing(obstacle);
+    }
+
+    this.obstacles.add(obstacle);
+    obstacle.body.setCollideWorldBounds(true);
+
+    if (isImmovable) {
+      obstacle.body.setImmovable(true);
+    } else {
+      obstacle.body.setDrag(0.5);
+      obstacle.body.setDamping(true);
+    }
+    obstacle.body.setBounce(1, 1);
+    obstacle.body.mass = 1;
+
+    this.physics.add.collider(this.ball, obstacle);
+    this.physics.add.collider(this.obstacles, this.obstacles);
+  }
+
   createObstacles() {
     const OBSTACLE_COLOR = 0x00ff00;
     const IMMUTABLE_COLOR = 0xff0000;
@@ -90,35 +118,12 @@ class Golf extends Phaser.Scene {
     for (let i = 0; i < 10; i++) {
       const x = Phaser.Math.Between(this.worldStartX, this.worldEndX);
       const y = Phaser.Math.Between(this.worldStartY, this.worldEndY);
-
       const size = Math.random() > 0.5 ? 20 : 50;
+      const isCircle = Math.random() > 0.5;
+      const isImmovable = Math.random() > 0.5;
+      const color = isImmovable ? IMMUTABLE_COLOR : OBSTACLE_COLOR;
 
-      let obstacle;
-
-      if (Math.random() > 0.5) {
-        obstacle = this.add.circle(x, y, size, OBSTACLE_COLOR);
-        this.physics.add.existing(obstacle);
-        obstacle.body.setCircle(size);
-      } else {
-        obstacle = this.add.rectangle(x, y, size, size, OBSTACLE_COLOR);
-        this.physics.add.existing(obstacle);
-      }
-
-      this.obstacles.add(obstacle);
-      obstacle.body.setCollideWorldBounds(true);
-
-      if (Math.random() > 0.5) {
-        obstacle.body.setImmovable(true);
-        obstacle.fillColor = IMMUTABLE_COLOR;
-      } else {
-        obstacle.body.setDrag(0.5);
-        obstacle.body.setDamping(true);
-      }
-      obstacle.body.setBounce(1, 1);
-      obstacle.body.mass = 1;
-
-      this.physics.add.collider(this.ball, obstacle);
-      this.physics.add.collider(this.obstacles, this.obstacles);
+      this.createObstacle(x, y, size, color, isCircle, isImmovable);
     }
   }
 
