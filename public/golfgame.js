@@ -41,7 +41,18 @@ class Golf extends Phaser.Scene {
     this.balls.push(this.createBall());
     this.balls.push(this.createBall());
 
-    this.physics.add.collider(this.balls, this.balls);
+    // when balls collide with each other, remove health
+    this.physics.add.collider(this.balls, this.balls, (ball1) => {
+      // the ball that is not the current ball
+      if (ball1 !== this.ball) {
+        ball1.health -= 100;
+      }
+    
+      if (ball1.health <= 0) {
+        ball1.destroy();
+        this.balls = this.balls.filter((ball) => ball !== ball1);
+      }
+    });
 
     this.ball = this.balls[0];
 
@@ -104,6 +115,8 @@ class Golf extends Phaser.Scene {
     // add drag
     ball.body.setDrag(0.1);
     ball.body.setDamping(true); // Enable damping for drag to take effect
+
+    ball.health = 100;
 
     return ball;
   }
