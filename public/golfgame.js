@@ -35,9 +35,7 @@ class Golf extends Phaser.Scene {
       )
       .setOrigin(0);
 
-    // create a white circle
-    this.createBall();
-
+    this.ball = this.createBall();
 
     // on click
     this.input.on("pointerdown", this.handlePointerDown, this);
@@ -51,24 +49,25 @@ class Golf extends Phaser.Scene {
   }
 
   createBall() {
-    this.ballSize = 20;
-    this.ball = this.add.circle(
+    const ballSize = 20;
+    const ball = this.add.circle(
       Phaser.Math.Between(this.worldStartX, this.worldEndX),
       Phaser.Math.Between(this.worldStartY, this.worldEndY),
-      this.ballSize,
+      ballSize,
       0xffffff
     );
 
     // add physics
-    this.physics.add.existing(this.ball);
-    this.ball.body.setCircle(this.ballSize);
-    this.ball.body.setBounce(1, 1);
-    this.ball.body.setCollideWorldBounds(true);
-    
-    // add drag
-    this.ball.body.setDrag(0.7);
-    this.ball.body.setDamping(true); // Enable damping for drag to take effect
+    this.physics.add.existing(ball);
+    ball.body.setCircle(ballSize);
+    ball.body.setBounce(1, 1);
+    ball.body.setCollideWorldBounds(true);
 
+    // add drag
+    ball.body.setDrag(0.7);
+    ball.body.setDamping(true); // Enable damping for drag to take effect
+
+    return ball;
   }
 
   handlePointerDown(pointer) {
