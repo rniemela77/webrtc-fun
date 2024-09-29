@@ -10,21 +10,49 @@ class Golf extends Phaser.Scene {
     this.force = 1.5;
     this.pointerDistance = 0;
 
+    this.worldStartX = this.scale.width * 0.25;
+    this.worldStartY = this.scale.height * 0.25;
+    this.worldWidthX = this.scale.width * 0.5;
+    this.worldWidthY = this.scale.height * 0.5;
+    this.worldEndX = this.worldStartX + this.worldWidthX;
+    this.worldEndY = this.worldStartY + this.worldWidthY;
+
+    this.physics.world.setBounds(
+      this.worldStartX,
+      this.worldStartY,
+      this.worldWidthX,
+      this.worldWidthY
+    );
+
+    // create border around worldbounds
+    this.add
+      .rectangle(
+        this.worldStartX,
+        this.worldStartY,
+        this.worldWidthX,
+        this.worldWidthY,
+        0x3784ff
+      )
+      .setOrigin(0);
+
     // create a white circle
-    this.ball = this.add.circle(100, 100, 10, 0xffffff);
+    this.ballSize = 20;
+    this.ball = this.add.circle(
+      Phaser.Math.Between(this.worldStartX, this.worldEndX),
+      Phaser.Math.Between(this.worldStartY, this.worldEndY),
+      this.ballSize,
+      0xffffff
+    );
 
     // add physics
     this.physics.add.existing(this.ball);
-    this.ball.body.setCircle(10);
+    this.ball.body.setCircle(this.ballSize);
     this.ball.body.setBounce(1, 1);
     this.ball.body.setCollideWorldBounds(true);
 
     // add drag
     this.ball.body.setDrag(0.7);
     this.ball.body.setDamping(true); // Enable damping for drag to take effect
-
-    this.ball.x = this.scale.width / 2;
-    this.ball.y = this.scale.height / 2;
 
     // on click
     this.input.on("pointerdown", this.handlePointerDown, this);
@@ -60,8 +88,8 @@ class Golf extends Phaser.Scene {
     const IMMUTABLE_COLOR = 0xff0000;
 
     for (let i = 0; i < 10; i++) {
-      const x = Phaser.Math.Between(0, this.scale.width);
-      const y = Phaser.Math.Between(0, this.scale.height);
+      const x = Phaser.Math.Between(this.worldStartX, this.worldEndX);
+      const y = Phaser.Math.Between(this.worldStartY, this.worldEndY);
 
       const size = Math.random() > 0.5 ? 20 : 50;
 
