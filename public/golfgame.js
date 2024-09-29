@@ -44,6 +44,25 @@ class Golf extends Phaser.Scene {
 
     this.ball = this.balls[0];
 
+    // for each ball in this.balls, show a white circle
+    this.tinyBalls = [];
+    this.balls.forEach((ball, index) => {
+      const x = this.worldStartX + index * 15;
+      const y = this.worldStartY - 20;
+      // create a circle
+      const tinyBall = this.add.circle(x, y, 4, 0xffffff).setOrigin(0);
+
+      this.tinyBalls.push(tinyBall);
+    });
+
+    this.events.on("update", () => {
+      // color the current ball
+      this.tinyBalls.forEach((tinyBall, index) => {
+        tinyBall.fillColor =
+          this.balls[index] === this.ball ? 0xff0000 : 0xffffff;
+      });
+    });
+
     // on click
     this.input.on("pointerdown", this.handlePointerDown, this);
 
