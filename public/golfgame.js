@@ -41,16 +41,16 @@ class Golf extends Phaser.Scene {
     this.balls.push(this.createBall());
     this.balls.push(this.createBall());
 
-    // when balls collide with each other, remove health
-    this.physics.add.collider(this.balls, this.balls, (ball1) => {
-      // the ball that is not the current ball
-      if (ball1 !== this.ball) {
-        ball1.health -= 100;
-      }
-    
-      if (ball1.health <= 0) {
-        ball1.destroy();
-        this.balls = this.balls.filter((ball) => ball !== ball1);
+    // Ball collision
+    this.physics.add.collider(this.balls, this.balls, (ball1, ball2) => {
+      // the ball that is not the current ball loses health
+      const hitBall = ball1 === this.ball ? ball2 : ball1;
+
+      hitBall.health -= 100;
+
+      if (hitBall.health <= 0) {
+        hitBall.destroy();
+        this.balls = this.balls.filter((ball) => ball !== hitBall);
       }
     });
 
