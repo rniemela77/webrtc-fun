@@ -49,11 +49,17 @@ class Golf extends Phaser.Scene {
       hitBall.health -= 100;
 
       if (hitBall.health <= 0) {
+        // destroy tinyball
+        const index = this.balls.indexOf(hitBall);
+        const tinyBall = this.tinyBalls[index];
+        tinyBall.destroy();
+
+        // destroy ball
         hitBall.destroy();
         this.balls = this.balls.filter((ball) => ball !== hitBall);
       }
     });
-
+    
     this.ball = this.balls[0];
 
     // for each ball in this.balls, show a white circle
