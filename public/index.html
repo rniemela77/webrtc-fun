@@ -9,11 +9,12 @@
       integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO"
       crossorigin="anonymous"
     ></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/simple-peer@latest/simple-peer.min.js"></script> -->
-
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/9.11.1/simplepeer.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
-    <script src="/golfgame.js" type="module"></script>
+    <!-- <script src="/4dpong.js" type="module"></script> -->
+    <script src="/pong.js" type="module"></script>
 
     <style>
       body {
@@ -37,7 +38,9 @@
   </head>
 
   <body>
-    <div>
+    <div>     <button id="connect">Connect</button>
+
+  
       <!-- <h1>Tuggle</h1> -->
 
       <!-- <div id="user-count">Connected Users: 0</div> -->
